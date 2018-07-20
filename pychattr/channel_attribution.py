@@ -80,6 +80,9 @@ class PyChAttr(object):
           the seed used by the random number generator; ensures
           reproducibility between runs when specified.
 
+        Attributes
+        ----------
+        #TODO: these
 
         """
         self.df = df
@@ -102,7 +105,7 @@ class PyChAttr(object):
         # light input param validation
         self._validate_params()
 
-        # turn on conversion
+        # turn on pandas to ri conversion
         pandas2ri.activate()
 
         # load the appropriate R packages
@@ -122,28 +125,36 @@ class PyChAttr(object):
         # adds two new attrs self.r_list_ and self.r_model_params_
         self._python_params_to_r_objects(r_packages=r_packages)
 
-        # if self.model_type == "both":
-        #     self.models = list()
-        #
-        #     self._heuristic_model(r_packages=r_packages)
-        #
-        #     self.model_ = self._markov_model(r_packages=r_packages)
-        #
-        # # one of {first_touch, last_touch, linear} heuristic model
-        # if self.model_type == "heuristic":
-        #     self.model_ = self._heuristic_model(r_packages=r_packages)
-        #
-        # # markov model
-        # if self.model_type == "markov":
-        #     self.model_ = self._markov_model(r_packages=r_packages)
+        # fit both types of models
+        if self.model_type == "both":
+            # heuristic
+            heuristic = self._heuristic_models(r_packages=r_packages)
+
+            # markov
+            markov = self._markov_model(r_packages=r_packages)
+
+            if self.return_transition_probs is True:
+                # separate and convert the sub-components
+                self.transition_matrix_ = pandas2ri.ri2py(markov[1])
+                self.removal_effects_ = pandas2ri.ri2py(markov[2])
+                markov = pandas2ri.ri2py(markov[0])
+
+            # TODO: parameterize "channel_name"
+            # combine the two models (they're just dataframes)
+            self.model_ = pd.merge(heuristic,
+                                   markov,
+                                   on="channel_name")
+
+        # one of {first_touch, last_touch, linear} heuristic model
+        if self.model_type == "heuristic":
+            self.model_ = self._heuristic_models(r_packages=r_packages)
+
+        # markov model only
+        if self.model_type == "markov":
+            self.model_ = self._markov_model(r_packages=r_packages)
 
         return self
 
-    # def transform(self):
-    #     pass
-    #
-    # def fit_transform(self):
-    #     pass
 
     def _validate_params(self):
         """Lightweight validation effort."""
@@ -182,26 +193,45 @@ class PyChAttr(object):
     def _python_params_to_r_objects(self, r_packages=None):
         """Converts python objects to the appropriate R objects."""
         # get the base R namespace
+        # get a ref to base R namespace
         baseR = r_packages[0]
 
-        # convert the pandas.DataFrame to an R list
-        self.r_list_ =  baseR.split(DataFrame(self.df),
-                           baseR.seq(baseR.nrow(DataFrame(self.df))))
+        # convert the pandas.DataFrame to an R dataframe
+        self.r_df_ = DataFrame(self.df)
 
         # convert the model params to strings in R
         self.r_model_params_ = {
             "path_feature": baseR.toString(self.path_feature),
+
             "conversion_feature":
                 baseR.toString(self.conversion_feature),
+
             "conversion_value_feature":
-                baseR.toString(self.conversion_value_feature),
-            "null_path_feature": baseR.toString(self.null_path_feature),
+                baseR.toString(self.conversion_value_feature)
+                if self.conversion_value_feature is not None
+                else NULL,
+
+            "null_path_feature": baseR.toString(self.null_path_feature)
+                if self.null_path_feature is not None
+                else NULL,
+
             "separator": baseR.toString(self.separator),
-            "order": baseR.toString(self.order),
-            "n_simulations": baseR.toString(self.n_simulations),
-            "max_step": baseR.toString(self.max_step),
+
+            "order": baseR.as_double(self.order),
+
+            "n_simulations": baseR.toString(self.n_simulations)
+                if self.n_simulations is not None
+                else NULL,
+
+            "max_step": baseR.toString(self.max_step)
+                if self.max_step is not None
+                else NULL,
+
             "return_transition_probs":
-                baseR.as_logical(self.return_transition_probs),
+                baseR.as_logical(self.return_transition_probs)
+                if self.return_transition_probs is not None
+                else NULL,
+
             "random_state": baseR.as_integer(self.random_state) if
             self.random_state != None else NULL
         }
@@ -210,50 +240,57 @@ class PyChAttr(object):
 
 
 
-    @classmethod
-    def _heuristic_model(cls, r_list=None, path_feature=None,
-                         conversion_feature=None,
-                         conversion_value_feature=None,
-                         separator=None, r_packages=None):
+    def _heuristic_models(self, r_packages=None):
         """Creates the heuristic models."""
+        # get a ref to the R package so we can call the function
+        ChannelAttributionR = r_packages[1]
 
-        """
-        self, df=None, path_feature=None,
-                         conversion_feature=None,
-                         conversion_value_feature=None,
-                         separator=None
-        """
-        baseR = r_packages[0]
-        ChannelAttribution = r_packages[1]
-        reshapeR = r_packages[2]
-        ggplot2R = r_packages[3]
+        # keywords can be passed to the underlying R function via
+        # exploding the dictionary
+        kwargs = {
+            "Data": self.r_df_,
+            "var_path": self.r_model_params_["path_feature"],
+            "var_conv": self.r_model_params_["conversion_feature"],
+            "var_value":
+                self.r_model_params_["conversion_value_feature"],
+            "sep": self.r_model_params_["separator"]
+        }
 
-        model = ChannelAttribution.heuristic_model(
-            r_list,
+        # fit the model
+        model = ChannelAttributionR.heuristic_models(**kwargs)
+
+        # the conversion to a pandas.DataFrame can happen here since
+        # there are not multiple items returned with this function
+
+        return pandas2ri.ri2py(model)
 
 
-        )
-
-
-    @classmethod
-    def _markov_model(cls, r_list=None, path_feature=None,
-                      conversion_feature=None,
-                      conversion_value_feature=None,
-                      null_path_feature=None, model_order=1,
-                      n_simulations=None, max_step=None,
-                      return_transition_matrix=None, separator=None,
-                      random_state=None, r_packages=None):
+    def _markov_model(self, r_packages=None):
         """Creates the hidden markov models."""
+        # get a ref to the R package so we can call the function
+        ChannelAttributionR = r_packages[1]
 
-        """
-        df=None, path_feature=None,
-                      conversion_feature=None,
-                      conversion_value_feature=None,
-                      null_path_feature=None, model_order=1,
-                      n_simulations=None, max_step=None,
-                      return_transition_matrix=None, separator=None
-        """
-        pass
+        # keywords can be passed to the underlying R function via
+        # exploding the dictionary
+        kwargs = {
+            "Data": self.r_df_,
+            "var_path": self.r_model_params_["path_feature"],
+            "var_conv": self.r_model_params_["conversion_feature"],
+            "var_value":
+                self.r_model_params_["conversion_value_feature"],
+            "var_null": self.r_model_params_["null_path_feature"],
+            "order": self.r_model_params_["order"],
+            "nsim": self.r_model_params_["n_simulations"],
+            "max_step": self.r_model_params_["max_step"],
+            "out_more": self.r_model_params_["return_transition_probs"],
+            "sep": self.r_model_params_["separator"],
+            "seed": self.r_model_params_["random_state"]
+        }
+
+        # fit the model
+        model = ChannelAttributionR.markov_model(**kwargs)
+
+        return model
 
 
 
