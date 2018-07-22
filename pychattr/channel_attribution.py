@@ -82,7 +82,12 @@ class PyChAttr(object):
 
         Attributes
         ----------
-        #TODO: these
+        r_df_: instance of `df` converted to an R DataFrame.
+
+        model_: the fitted model.
+
+        r_model_params_: dict mapping the PyChAttr parameters to their
+            equivalent R function parameters.
 
         """
         self.df = df
