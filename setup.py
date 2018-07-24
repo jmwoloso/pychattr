@@ -24,15 +24,14 @@ setup(name="pychattr",
           "Development Status :: 3 - Alpha",
           "Programming Language :: Python :: 3",
           "Programming Language :: Python :: 3.6",
-          "Topic :: Marketing Channel Attribution",
-          "Topic :: Multi-touch Attribution",
+          "Topic :: Software Development :: Libraries :: Python "
+          "Modules",
+          "Topic :: Scientific/Engineering",
           "Operating System :: Unix",
           "Operating System :: MacOS",
           "Operating System :: POSIX",
           "Operating System :: Microsoft :: Windows",
           "Intended Audience :: Science/Research",
-          "Intended Audience :: Developers",
-          "Intended Audience :: Marketing Operations",
-          "Intended Audience :: Data Science",
-          "Intended Audience :: Data Analysis"
+          "Intended Audience :: Other Audience",
+          "Intended Audience :: Information Technology"
       ])
