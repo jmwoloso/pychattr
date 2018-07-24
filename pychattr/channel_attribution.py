@@ -1,48 +1,42 @@
-import ctypes
-import pymc3
-import networkx as nx
 import pandas as pd
-from hmmlearn.hmm import GaussianHMM
-from pomegranate import State, HiddenMarkovModel
-from pomegranate.distributions import DiscreteDistribution
-from rpy2.robjects import pandas2ri, r, NULL
-from rpy2.robjects.vectors import DataFrame
-from rpy2.robjects.packages import importr, data
-from rpy2.robjects.lib import ggplot2
+from rpy2.robjects import pandas2ri, NULL
+from rpy2.robjects.vectors import DataFrame as RDataFrame
+from rpy2.robjects.packages import importr
 
 
 class PyChAttr(object):
-    def __init__(self, df=None, model_type="both",
-                 model_paradigm=None, path_feature=None,
-                 conversion_feature=None,
-                 conversion_value_feature=None, null_path_feature=None,
-                 separator=">", order=1, n_simulations=None,
-                 max_step=None, return_transition_probs=True,
-                 random_state=None):
+    def __init__(self, df=None, markov_model=True, heuristic_model=True,
+                 first_touch=True, last_touch=True,
+                 linear_touch=True, path_feature=None,
+                 conversion_feature=None, conversion_value_feature=None,
+                 null_path_feature=None, separator=">", order=1,
+                 n_simulations=None, max_step=None,
+                 return_transition_probs=True, random_state=None,
+                 return_plot_data=True):
         """
 
         Parameters
         ----------
         df : pandas.DataFrame containing the preprocessed path data.
 
-        model_type : str; one of {'markov', 'heuristic', 'both'};
-          default='both'; required.
+        markov_model : bool; whether to return the markov model;
+          default=True; required.
 
-          the type of channel attribution model to construct.
+        heuristic_model : bool; whether to return any of the models
+          used traditionally in multi-touch attribution;
+          default=True; required; ignored when `heuristic_model=False`.
 
-        model_paradigm :  str or None; one of {'first_touch',
-          'last_touch', 'linear', 'all_heuristics', 'markov', 'all'};
-          default='all'; required.
+        first_touch : bool; whether to return the first-touch
+          attribution model; default=True; required; ignored when
+          `heuristic_model=False`.
 
-          the type of modeling paradigm to use.
+        last_touch : bool; whether to return the last-touch
+          attribution model; default=True; required; ignored when
+          `heuristic_model=False`.
 
-          the 'first_touch', 'last_touch', 'linear' and 'all_heuristics'
-          paradigms will are used with `model_type='heuristic'`.
-
-          the `markov` paradigm will be used when `model_type='markov'`.
-
-          the `all` paradigm will be used when `model_type='both'` and
-          will be the combination of the above.
+        linear_touch : bool; whether to return the linear-touch
+          attribution model; default=True; required; ignored when
+          `heuristic_model=False`.
 
         path_feature : str; default=None; required.
           the name of the column in df containing the paths.
@@ -69,16 +63,20 @@ class PyChAttr(object):
         n_simulations : one of {int, None}; default=None;
           total simulations from the transition matrix.
 
-        max_step : one of {int, None}; default=None; optional.
+        max_step : one of {int, None}; default=None.
           the maximum number of steps for a single simulated path.
 
         return_transition_probs : bool; default=True; required.
           whether to return the transition probabilities between
           channels and removal effects.
 
-        random_state : one of {int, None}; default=None; optional.
+        random_state : one of {int, None}; default=None.
           the seed used by the random number generator; ensures
           reproducibility between runs when specified.
+
+        return_plot_data : bool; default=True.
+          whether to return the melted datasets suitable for plotting.
+
 
         Attributes
         ----------
@@ -87,12 +85,19 @@ class PyChAttr(object):
         model_: the fitted model.
 
         r_model_params_: dict mapping the PyChAttr parameters to their
-            equivalent R function parameters.
+          equivalent R function parameters.
+
+        melted_data_ = list containing the melted conversion
+          dataframe and the melted conversion value dataframe for
+          plotting.
 
         """
         self.df = df
-        self.model_type = model_type
-        self.model_paradigm = model_paradigm
+        self.markov_model = markov_model
+        self.heuristic_model = heuristic_model
+        self.first_touch = first_touch
+        self.last_touch = last_touch
+        self.linear_touch = linear_touch
         self.path_feature = path_feature
         self.conversion_feature = conversion_feature
         self.conversion_value_feature = conversion_value_feature
@@ -103,9 +108,15 @@ class PyChAttr(object):
         self.max_step = max_step
         self.return_transition_probs = return_transition_probs
         self.random_state = random_state
+        self.return_plot_data = return_plot_data
 
     def fit(self):
-        """fit the dataframe and produce the model."""
+        """fit the dataframe and produce the model.
+
+        Returns
+        -------
+        self
+        """
 
         # light input param validation
         self._validate_params()
@@ -114,29 +125,39 @@ class PyChAttr(object):
         pandas2ri.activate()
 
         # load the appropriate R packages
-        baseR = importr("base")
-        ChannelAttributionR = importr("ChannelAttribution")
-        reshapeR = importr("reshape")
-        ggplot2R = importr("ggplot2")
-
-        r_packages = [
-            baseR,
-            ChannelAttributionR,
-            reshapeR,
-            ggplot2R
-        ]
+        Rbase = importr("base")
+        RChannelAttribution = importr("ChannelAttribution")
 
         # convert the pandas.DataFrame to an R Vector List
         # adds two new attrs self.r_list_ and self.r_model_params_
-        self._python_params_to_r_objects(r_packages=r_packages)
+        self.r_df_, self.r_model_params_ = \
+            self._python_params_to_r_objects(
+                r_package=Rbase
+            )
+
+        # get the final feature subsets
+        if self.conversion_value_feature is not None:
+            self.conversion_features_, \
+            self.conversion_value_features_ = \
+                self._get_feature_subsets(
+                    return_values=True
+                )
+        else:
+            self.conversion_features_ = \
+                self._get_feature_subsets(
+                    return_values=False
+                )
 
         # fit both types of models
-        if self.model_type == "both":
+        if self.markov_model & self.heuristic_model == True:
             # heuristic
-            heuristic = self._heuristic_models(r_packages=r_packages)
+            heuristic = \
+                self._heuristic_models(r_package=RChannelAttribution)
+
+            self.heuristic_ = heuristic.copy()
 
             # markov
-            markov = self._markov_model(r_packages=r_packages)
+            markov = self._markov_model(r_package=RChannelAttribution)
 
             if self.return_transition_probs is True:
                 # separate and convert the sub-components
@@ -144,111 +165,267 @@ class PyChAttr(object):
                 self.removal_effects_ = pandas2ri.ri2py(markov[2])
                 markov = pandas2ri.ri2py(markov[0])
 
-            # TODO: parameterize "channel_name"
+                markov = markov.rename(
+                    columns={
+                        "total_conversions": "markov model",
+                        "channel_name": "channel name"
+                    }
+                )
+                if self.conversion_value_feature is not None:
+                    markov = markov.rename(
+                        columns={
+                            "total_conversion_value": "markov value",
+                            "channel_name": "channel name"
+                        }
+                    )
+                self.markov_ = markov.copy()
+            else:
+                markov = markov.rename(
+                    columns={
+                        "total_conversions": "markov model",
+                        "channel_name": "channel name"
+                    }
+                )
+                if self.conversion_value_feature is not None:
+                    markov = markov.rename(
+                        columns={
+                            "total_conversion_value": "markov value",
+                            "channel_name": "channel name"
+                        }
+                    )
+                self.markov_ = markov.copy()
+
+            # TODO: parameterize "channel_name"?
             # combine the two models (they're just dataframes)
-            self.model_ = pd.merge(heuristic,
-                                   markov,
-                                   on="channel_name")
+            self.model_ = pd.merge(heuristic.copy(),
+                                   markov.copy(),
+                                   on="channel name")
 
-        # one of {first_touch, last_touch, linear} heuristic model
-        if self.model_type == "heuristic":
-            self.model_ = self._heuristic_models(r_packages=r_packages)
+        # heuristic model only
+        elif self.markov_model is False and self.heuristic_model is \
+                True:
+            self.heuristic_ = self.model_ = \
+                self._heuristic_models(r_package=RChannelAttribution)
 
-        # markov model only
-        if self.model_type == "markov":
-            self.model_ = self._markov_model(r_packages=r_packages)
+        # fit markov only
+        else:
+            markov = \
+                self._markov_model(r_package=RChannelAttribution)
+
+            if self.return_transition_probs is True:
+                # the conversion back to pandas needs to happen here
+                self.transition_matrix_ = pandas2ri.ri2py(markov[1])
+                self.removal_effects_ = pandas2ri.ri2py(markov[2])
+                markov = pandas2ri.ri2py(markov[0])
+                markov = markov.rename(
+                    columns={
+                        "total_conversions": "markov model",
+                        "channel_name": "channel name"
+                    }
+                )
+                if self.conversion_value_feature is not None:
+                    markov = markov.rename(
+                        columns={
+                            "total_conversion_value": "markov value",
+                            "channel_name": "channel name"
+                        }
+                    )
+            else:
+                markov = markov.rename(
+                    columns={
+                        "total_conversions": "markov model",
+                        "channel_name": "channel name"
+                    }
+                )
+                if self.conversion_value_feature is not None:
+                    markov = markov.rename(
+                        columns={
+                            "total_conversion_value": "markov value",
+                            "channel_name": "channel name"
+                        }
+                    )
+
+            # assign the attributes
+            self.markov_ = self.model_= markov.copy()
+
+        if self.return_plot_data is True:
+            self.melted_data_ = list()
+
+            # add the melted conversion totals data
+            self.melted_data_.append(
+                pd.melt(
+                    self.model_.loc[:,
+                    self.conversion_features_].copy(),
+                    id_vars=["channel name"],
+                    var_name="model heuristic",
+                    value_name="total conversions"
+                )
+            )
+            if self.conversion_value_feature is not None:
+                # add the melted conversion value data
+                self.melted_data_.append(
+                    pd.melt(
+                        self.model_.loc[:,
+                        self.conversion_value_features_].copy(),
+                        id_vars=["channel name"],
+                        var_name="model heuristic",
+                        value_name="total conversion value"
+                    )
+                )
 
         return self
 
-
     def _validate_params(self):
         """Lightweight validation effort."""
-        # model_type
-        if self.model_type not in ["markov", "heuristic", "both"]:
-            raise ValueError("`model_type` must be one of {'markov', "
-                             "'heuristic', 'both'}")
+        if self.markov_model not in [True, False]:
+            raise ValueError("`markov_model` must be one of {True, "
+                             "False}")
 
-        # validate by model_type
-        if self.model_type == "both":
-            if self.model_paradigm != "all":
-                raise ValueError("`model_paradigm` must be 'all' "
-                                 "when `model_type='both'`")
-        if self.model_type == "markov":
-            # model_paradigm must align with model_type
-            if self.model_paradigm != "markov":
-                raise ValueError("`model_paradigm` must be 'markov' "
-                                 "when `model_type='markov'`")
+        if self.heuristic_model not in [True, False]:
+            raise ValueError("`heuristic_model` must be one of {True, "
+                             "False}")
 
-        if self.model_type == "heuristic":
-            # model_paradigm
-            if self.model_paradigm not in \
-                    ["first_touch", "last_touch", "linear",
-                     "all_heuristics"]:
-                raise ValueError("`model_paradigm` must be one of "
-                                 "{'first_touch', 'last_touch', "
-                                 "'linear', 'all_heuristics'} when"
-                                 "`model_type='heuristic'`")
+        if self.markov_model & self.heuristic_model == False:
+            raise ValueError("at least one of `markov_model` and "
+                             "`heuristic_model` must be True")
+
+        if self.heuristic_model is True:
+            # if these are all False, raise
+            if self.first_touch == self.last_touch == \
+                    self.linear_touch == False:
+                raise ValueError("must specify as True at least one of "
+                                 "{`first_touch`, `last_touch`, "
+                                 "`linear_touch`} when "
+                                 "setting `heuristic_model=True`")
+
+        if self.first_touch not in [True, False]:
+            raise ValueError("`first_touch` must be one of {True, "
+                             "False}")
+
+        if self.last_touch not in [True, False]:
+            raise ValueError("`last_touch` must be one of {True, "
+                             "False}")
+
+        if self.linear_touch not in [True, False]:
+            raise ValueError("`linear_touch` must be one of {True, "
+                             "False}")
+
+        if self.path_feature is None:
+            raise ValueError("`path_feature` must be specified.")
+
+        if self.conversion_feature is None:
+            raise ValueError("`conversion_feature` must be specified.")
+
+        if self.return_transition_probs not in [True, False]:
+            raise ValueError("`return_transition_probs` must be one "
+                             "of {True, False}")
+
+        if self.n_simulations is not None:
+            if type(self.n_simulations) != int:
+                raise ValueError("`n_simulations` must be one of {"
+                                 "int, None}")
+
+        if self.max_step is not None:
+            if type(self.max_step) != int:
+                raise ValueError("`max_step` must be one of {int, "
+                                 "None}")
+
+        if self.markov_model is True:
+            if self.order is not None:
+                if type(self.order) != int:
+                    raise ValueError("`order` must be one of {int, "
+                                     "None}")
+
+        if self.conversion_value_feature is not None:
+            if type(self.conversion_value_feature) != str:
+                raise ValueError("`conversion_value_feature` should "
+                                 "be one of {str, None}")
+
+        if self.null_path_feature is not None:
+            if type(self.null_path_feature) != str:
+                raise ValueError("`null_path_feature` must be one of "
+                                 "{str, None}")
 
         # check the separator is the appropriate length
         if len(self.separator) != 1:
             raise ValueError("`separator` must have length 1")
 
+    def _get_feature_subsets(self, return_values=False):
+        """Return the feature subsets depending on input params."""
+        conversion_features = ["channel name"]
+        conversion_value_features = ["channel name"]
+        if self.first_touch is True:
+            conversion_features.append("first touch")
+        if self.last_touch is True:
+            conversion_features.append("last touch")
+        if self.linear_touch is True:
+            conversion_features.append("linear touch")
+        if return_values is True:
+            if self.first_touch is True:
+                conversion_value_features.append("first touch value")
+            if self.last_touch is True:
+                conversion_value_features.append("last touch value")
+            if self.linear_touch is True:
+                conversion_value_features.append("linear touch value")
 
+        if self.markov_model is True:
+            conversion_features.append("markov model")
+            if return_values is True:
+                conversion_value_features.append("markov value")
+        return conversion_features, conversion_value_features if return_values is True else conversion_features
 
-    def _python_params_to_r_objects(self, r_packages=None):
+    def _python_params_to_r_objects(self, r_package=None):
         """Converts python objects to the appropriate R objects."""
-        # get the base R namespace
+
         # get a ref to base R namespace
-        baseR = r_packages[0]
+        Rbase = r_package
 
         # convert the pandas.DataFrame to an R dataframe
-        self.r_df_ = DataFrame(self.df)
+        r_df_ = RDataFrame(self.df)
 
         # convert the model params to strings in R
-        self.r_model_params_ = {
-            "path_feature": baseR.toString(self.path_feature),
+        r_model_params_ = {
+            "path_feature": Rbase.toString(self.path_feature),
 
             "conversion_feature":
-                baseR.toString(self.conversion_feature),
+                Rbase.toString(self.conversion_feature),
 
             "conversion_value_feature":
-                baseR.toString(self.conversion_value_feature)
+                Rbase.toString(self.conversion_value_feature)
                 if self.conversion_value_feature is not None
                 else NULL,
 
-            "null_path_feature": baseR.toString(self.null_path_feature)
+            "null_path_feature": Rbase.toString(self.null_path_feature)
                 if self.null_path_feature is not None
                 else NULL,
 
-            "separator": baseR.toString(self.separator),
+            "separator": Rbase.toString(self.separator),
 
-            "order": baseR.as_double(self.order),
+            "order": Rbase.as_double(self.order),
 
-            "n_simulations": baseR.toString(self.n_simulations)
+            "n_simulations": Rbase.toString(self.n_simulations)
                 if self.n_simulations is not None
                 else NULL,
 
-            "max_step": baseR.toString(self.max_step)
+            "max_step": Rbase.toString(self.max_step)
                 if self.max_step is not None
                 else NULL,
 
             "return_transition_probs":
-                baseR.as_logical(self.return_transition_probs)
+                Rbase.as_logical(self.return_transition_probs)
                 if self.return_transition_probs is not None
                 else NULL,
 
-            "random_state": baseR.as_integer(self.random_state) if
+            "random_state": Rbase.as_integer(self.random_state) if
             self.random_state != None else NULL
         }
 
-        return self
+        return r_df_, r_model_params_
 
-
-
-    def _heuristic_models(self, r_packages=None):
+    def _heuristic_models(self, r_package=None):
         """Creates the heuristic models."""
         # get a ref to the R package so we can call the function
-        ChannelAttributionR = r_packages[1]
+        RChannelAttribution = r_package
 
         # keywords can be passed to the underlying R function via
         # exploding the dictionary
@@ -262,18 +439,53 @@ class PyChAttr(object):
         }
 
         # fit the model
-        model = ChannelAttributionR.heuristic_models(**kwargs)
+        model = RChannelAttribution.heuristic_models(**kwargs)
 
         # the conversion to a pandas.DataFrame can happen here since
         # there are not multiple items returned with this function
+        model = pandas2ri.ri2py(model)
 
-        return pandas2ri.ri2py(model)
+        # adjust the feature names; the default names are returned by
+        # the underlying c++ code via the ChannelAttribution library
 
+        features_to_rename = {
+            "channel_name": "channel name",
+            "first_touch_conversions": "first touch",
+            "first_touch_value": "first touch value",
+            "last_touch_conversions": "last touch",
+            "last_touch_value": "last touch value",
+            "linear_touch_conversions": "linear touch",
+            "linear_touch_value": "linear touch value"
+        }
 
-    def _markov_model(self, r_packages=None):
+        # we'll pop the item from the dict according to the flags set
+        # during instantiation
+        if self.first_touch is False:
+            _ = features_to_rename.pop("first_touch_conversions")
+            _ = features_to_rename.pop("first_touch_value")
+        if self.last_touch is False:
+            _ = features_to_rename.pop("last_touch_conversions")
+            _ = features_to_rename.pop("last_touch_value")
+        if self.linear_touch is False:
+            _ = features_to_rename.pop("linear_touch_conversions")
+            _ = features_to_rename.pop("linear_touch_value")
+
+        # apply the renaming
+        model = model.rename(
+            columns=features_to_rename
+        )
+
+        if self.conversion_value_feature is not None:
+            _ = features_to_rename.pop("first_touch_value")
+            _ = features_to_rename.pop("last_touch_value")
+            _ = features_to_rename.pop("linear_touch_value")
+
+        return model
+
+    def _markov_model(self, r_package=None):
         """Creates the hidden markov models."""
         # get a ref to the R package so we can call the function
-        ChannelAttributionR = r_packages[1]
+        RChannelAttribution = r_package
 
         # keywords can be passed to the underlying R function via
         # exploding the dictionary
@@ -293,11 +505,27 @@ class PyChAttr(object):
         }
 
         # fit the model
-        model = ChannelAttributionR.markov_model(**kwargs)
+        model = RChannelAttribution.markov_model(**kwargs)
+
+        # we're only returning a dataframe so we can make the
+        # conversion back to pandas and change the feature name
+        if self.return_transition_probs is False:
+            model = pandas2ri.ri2py(model)
+            model = model.rename(
+                columns={
+                    "total_conversions": "markov model",
+                    "channel_name": "channel name"
+                }
+            )
+            if self.conversion_value_feature is not None:
+                model = model.rename(
+                    columns={
+                        "total_conversion_value": "markov value",
+                        "channel_name": "channel name"
+                    }
+                )
 
         return model
-
-
 
 
 
