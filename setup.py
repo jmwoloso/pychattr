@@ -21,7 +21,7 @@ setup(name="pychattr",
           "tzlocal==1.5.1"
       ],
       classifiers=[
-          "Development Status :: 0 - Initial",
+          "Development Status :: 3 - Alpha",
           "Programming Language :: Python :: 3",
           "Programming Language :: Python :: 3.6",
           "Topic :: Marketing Channel Attribution",
