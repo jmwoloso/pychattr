@@ -9,16 +9,18 @@ ChannelAttribution
 
 # Python Requirements
 
-The following python package versions were installed when I created this library, so your mileage may vary when attempting to use differing versions.
+The following python package versions were installed when I created this library, so your mileage may vary when attempting to use differing versions. My versions are in parentheses.
 
 ```
-Cython>=0.28.2
+Cython (0.28.2)
 
-pandas>=0.23.3
+numpy (1.14.5)
 
-matplotlib>=2.2.2
+pandas (0.23.3)
 
-rpy>=2.9.4
+matplotlib (2.2.2)
+
+rpy2 (2.9.4)
 ```
 
 # Additional Items of Note
