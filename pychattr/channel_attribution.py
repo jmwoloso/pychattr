@@ -53,6 +53,10 @@ class PyChAttr(object):
           the name of the column in df containing the paths that do
           not lead to conversion.
 
+          NOTE: if specified, the feature name in the dataframe must be
+          "total_null" or errors will occur within the underlying
+          R library.
+
         separator : str; default='>'.
           symbol used to denote transition from one path to the next.
 
@@ -149,7 +153,7 @@ class PyChAttr(object):
                 )
 
         # fit both types of models
-        if self.markov_model & self.heuristic_model == True:
+        if self.markov_model is True & self.heuristic_model is True:
             # heuristic
             heuristic = \
                 self._heuristic_models(r_package=RChannelAttribution)
@@ -208,7 +212,8 @@ class PyChAttr(object):
                 self._heuristic_models(r_package=RChannelAttribution)
 
         # fit markov only
-        else:
+        elif self.markov_model is True and self.heuristic_model is \
+                False:
             markov = \
                 self._markov_model(r_package=RChannelAttribution)
 
@@ -372,7 +377,11 @@ class PyChAttr(object):
             conversion_features.append("markov model")
             if return_values is True:
                 conversion_value_features.append("markov value")
-        return conversion_features, conversion_value_features if return_values is True else conversion_features
+        if return_values is True:
+            return conversion_features, conversion_value_features
+        elif return_values is False:
+            return conversion_features
+
 
     def _python_params_to_r_objects(self, r_package=None):
         """Converts python objects to the appropriate R objects."""
@@ -403,11 +412,11 @@ class PyChAttr(object):
 
             "order": Rbase.as_double(self.order),
 
-            "n_simulations": Rbase.toString(self.n_simulations)
+            "n_simulations": Rbase.as_double(self.n_simulations)
                 if self.n_simulations is not None
                 else NULL,
 
-            "max_step": Rbase.toString(self.max_step)
+            "max_step": Rbase.as_double(self.max_step)
                 if self.max_step is not None
                 else NULL,
 
@@ -416,7 +425,7 @@ class PyChAttr(object):
                 if self.return_transition_probs is not None
                 else NULL,
 
-            "random_state": Rbase.as_integer(self.random_state) if
+            "random_state": Rbase.as_double(self.random_state) if
             self.random_state != None else NULL
         }
 
@@ -450,11 +459,11 @@ class PyChAttr(object):
 
         features_to_rename = {
             "channel_name": "channel name",
-            "first_touch_conversions": "first touch",
+            "first_touch": "first touch",
             "first_touch_value": "first touch value",
-            "last_touch_conversions": "last touch",
+            "last_touch": "last touch",
             "last_touch_value": "last touch value",
-            "linear_touch_conversions": "linear touch",
+            "linear_touch": "linear touch",
             "linear_touch_value": "linear touch value"
         }
 
