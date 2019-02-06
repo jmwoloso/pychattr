@@ -1,0 +1,10 @@
+channel_name,first_touch_conversions,first_touch_cost,first_touch_revenue,last_touch_conversions,last_touch_cost,last_touch_revenue,linear_touch_conversions,linear_touch_cost,linear_touch_revenue
+organic,419,0,0,1052,0,0,735.3333333333333,0,0
+direct,1197,0,0,781,0,0,989.0,0,0
+other,139,0,0,68,0,0,103.5,0,0
+email,670,0,0,575,0,0,622.5,0,0
+social,295,0,0,274,0,0,284.5,0,0
+articles,105,0,0,76,0,0,90.5,0,0
+events,2,0,0,1,0,0,1.6666666666666665,0,0
+affiliate,0,0,0,0,0,0,0.0,0,0
+display,0,0,0,0,0,0,0.0,0,0

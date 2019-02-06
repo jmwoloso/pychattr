@@ -11,7 +11,7 @@ sns.set_style("darkgrid")
 Rbase = importr("base")
 RChannelAttribution = importr("ChannelAttribution")
 
-df = pd.read_csv("demo_data.csv",
+df = pd.read_csv("/home/jason/source_code/python_packages/pychattr/demo_data.csv",
                  header=0)
 
 
@@ -27,8 +27,8 @@ pychattr_model = PyChAttr(df=df,
                           null_path_feature="total_null",
                           separator=">",
                           order=1,
-                          n_simulations=None,
-                          max_step=None,
+                          n_simulations=1000,
+                          max_step=42,
                           return_transition_probs=True,
                           random_state=26,
                           return_plot_data=True)
