@@ -982,4 +982,4 @@ RcppExport SEXP markov_model_cpp(SEXP Data_p, SEXP var_path_p, SEXP var_conv_p, 
 
  END_RCPP
 
-}		
+}
