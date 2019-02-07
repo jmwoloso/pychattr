@@ -1,9 +1,16 @@
 import pandas as pd
 
+# def heuristic_models(df=None, first_touch=True, last_touch=True,
+#                      linear_touch=True, path_feature=None,
+#                      conversion_feature=None,
+#                      conversion_value_feature=None,
+#                      null_path_feature=None, separator=">",
+#                      return_transition_probs=True,
+#                      return_plot_data=True):
 
 def heuristic_models(df=None, path_feature=None,
-                     conversion_feature=None, cost_feature=None,
-                     revenue_feature=None, separator=">"):
+                     conversion_feature=None, revenue_feature=None,
+                     cost_feature=None, separator=">"):
     """Traditional heuristic models (first-touch, last-touch,
     linear-touch)."""
     def make_touch_point_dict(touch_point):
@@ -63,8 +70,8 @@ def heuristic_models(df=None, path_feature=None,
 
         return touch_point_dict
 
-    has_cost = True if cost_feature else False
     has_revenue = True if revenue_feature else False
+    has_cost = True if cost_feature else False
     path_values = df.loc[:, path_feature].values
     conversion_values = df.loc[:, conversion_feature].values
     revenue_values = df.loc[:, revenue_feature].values if \
