@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+# TODO: figure out how to 1) test for windows and 2) set the compiler
+#  to mingw32 or 64 depending on platform
+import sys
+if sys.platform == "win32":
+    extra_compiler_args="--compiler=mingw32"
+else:
+    extra_compiler_args=None
 try:
     from setuptools import setup
     from setuptools.extension import Extension
@@ -13,8 +20,13 @@ import pychattr
 
 # our cython markov extensions
 exts = [
-    Extension("markov",
-              sources=["markov.pyx"])
+    Extension(
+        "markov",
+        sources=["markov.pyx", "ChannelAttribution.cpp"],
+        language="c++",
+        extra_compile_args=extra_compiler_args,
+        include_dirs=["src/"]
+    )
 ]
 
 setup(
