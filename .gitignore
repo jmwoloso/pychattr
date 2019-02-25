@@ -252,3 +252,8 @@ fabric.properties
 .vscode/
 
 docs/
+notebooks/
+data/
+python_scripts/
+channel_attribution.py
+dev.py

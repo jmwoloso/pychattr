@@ -1,51 +1,132 @@
 """
-heuristic.py: contains the class wrapper for the heuristic models
+heuristic.py: contains the class wrapper for the heuristic models 
 used in channel attribution.
+
+see: https://www.bizible.com/blog/multi-touch-attribution-full-debrief
 """
 
 
+def _first_touch():
+    """First-touch attribution model."""
+    pass
+
+def _last_touch():
+    """Last-touch attribution model."""
+    pass
+
+def _linear_touch():
+    """Linear touch attribution model."""
+    pass
+
+def _time_decay():
+    """Time decay attribution model."""
+    pass
+
+def _u_shaped():
+    """U-shaped attribution model."""
+    pass
+
+def _w_shaped():
+    """W-shaped attribution model."""
+    pass
+
+def _z_shaped():
+    """Z-shaped (full path) attribution model."""
+    pass
+
+def _ensemble():
+    """Blended version of all the selected heuristic models."""
+    pass
 
 
 class HeurisiticModel(object):
-    def __init__(self, dataframe=None, path_feature=None,
-                 conversion_feature=None, revenue_feature=None,
-                 cost_feature=None, separator=">>>"):
-        """
-        Class for the Heuristic (First-touch, Last-touch,
-        Linear-touch) channel attribution models.
+    """
+    Class for the Heuristic (First-touch, Last-touch,
+    Linear-touch, etc.) channel attribution models.
 
-        Parameters
-        ----------
-        dataframe: pandas.DataFrame; required.
-            DataFrame containing the attribution dataset.
+    Parameters
+    ----------
+    first_touch: boolean; required.
+        Whether to calculate the first-touch heuristic model.
 
-        path_feature: string; required.
-            The name of the feature containing the paths.
+    last_touch: boolean; required.
+        Whether to calculate the last-touch heuristic model.
 
-        conversion_feature: string; required.
-            The name of the feature containing the number of
-            conversions for each path.
+    linear_touch: boolean; required.
+        Whether to calculate the linear-touch heuristic model.
 
-        revenue_feature: string; optional.
-            The name of the feature containing the revenue generated
-            for each path.
+    time_decay: boolean; required.
+        Whether to calculate the time-decay heuristic model.
 
-        cost_feature: string; optional.
-            The name of the feature containing the cost incurred for
-            each path.
+    u_shaped: boolean; required.
+        Whether to calculate the u-shaped heuristic model.
 
-        separator: string; required.
-            The symbol used to separate the touch points in each path.
-        """
-        self.df = dataframe
-        self.path = path_feature
-        self.conversion = conversion_feature
-        self.revenue = revenue_feature
-        self.cost = cost_feature
-        self.separator = separator
+    w_shaped: boolean; required.
+        Whether to calculate the w-shaped heuristic model.
 
-    def fit(self):
-        """"""
+    z_shaped: boolean; required.
+        Whether to calculate the z-shaped heuristic model.
+
+    ensemble_results: boolean; required.
+        Whether to create an ensemble of the resulting models.
+
+    Attributes
+    ----------
+    # TODO: add attrs here
+
+    Examples
+    --------
+    #TODO: add examples here
+
+    See Also
+    --------
+    #TODO: add see also (if needed)
+
+    Notes
+    -----
+    #TODO: add notes here (if needed)
+
+    References
+    ----------
+    https://www.bizible.com/blog/multi-touch-attribution-full-debrief
+    """
+
+    def __init__(self,first_touch=True,
+                 last_touch=True, linear_touch=True, time_decay=True,
+                 u_shaped=True, w_shaped=True, z_shaped=True,
+                 ensemble_results=True):
+
+        self.first = first_touch
+        self.last = last_touch
+        self.linear = linear_touch
+        self.time = time_decay
+        self.u = u_shaped
+        self.w = w_shaped
+        self.z = z_shaped
+        self.ensemble = ensemble_results
+
+    def fit(self, dataframe=None):
+        """Fit the specified heuristic models."""
+        self._
+        # derive attributes that will be used during model construction
+        self._derive_attributes(dataframe)
+
+        # attempt to convert the values to the types required for
+        # modeling
+
+        # container to hold the resulting models
+        self.results_ =
+
+
+    def _derive_attributes(self, df):
+        """Derives attributes used to identify which components to
+        include in the heuristic model."""
+        self._paths = df.loc[:, self.paths].values
+        self._conversions = df.loc[:, self.conversions].values
+        self._revenues_ = df.loc[:, self.revenues].values if \
+            self.revenues else None
+        self._costs = df.loc[:, self.costs].values if self.costs else\
+            None
 
 
 

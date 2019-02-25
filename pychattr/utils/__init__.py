@@ -1,5 +1,6 @@
-from .classes import OrderedSet
+from .mixins import ChannelAttributionMixin
+
 
 __all__ = [
-    "OrderedSet",
+    "ChannelAttributionMixin"
 ]

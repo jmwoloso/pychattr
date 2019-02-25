@@ -1,4 +1,17 @@
-__version__ = "0.1.6"
-__author__ = "Jason Wolosonovich"
-__email__ = "jason@avaland.io"
-__license__ = "GPL-3.0"
+"""
+Marketing Attribution module for Python
+=======================================
+
+pychattr is a Python library providing a variety of canonical
+marketing attribution models including Heurisitic (e.g. first-touch,
+last-touch, etc.), Markov Chain, Shapley Value and Halo Effect via a
+streamlined sklearn-like API.
+"""
+#TODO: versioning
+__version__ = ""
+__author__ = "Jason Wolosonovich, Brett Nebeker, Abhi Sivasailam & " \
+             "Ankur Chawla"
+__license__ = "BSD 3-Clause"
+__maintainer__ = "Jason Wolosonovich, Brett Nebeker, Abhi Sivasailam " \
+                 "& Ankur Chawla"
+__email__ = "pychattr@avaland.io"
