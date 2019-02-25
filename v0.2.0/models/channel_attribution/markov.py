@@ -1,8 +1,9 @@
 
 
 
-class ChannelAttribution(object):
+class MarkovModel(object):
     def __init__(self):
         """
-        Class for markov and heuristic channel attribution.
+        Class for Markov channel attribution model.
         """
+        pass
