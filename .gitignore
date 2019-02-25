@@ -257,3 +257,4 @@ data/
 python_scripts/
 channel_attribution.py
 dev.py
+pychattr/v0.1.0
