@@ -5,9 +5,6 @@ various model specifications.
 
 
 class ChannelAttributionMixin(object):
-    """
-    Base class for the channel attribution models.
-    """
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
                  separator=">>>"):
@@ -17,7 +14,7 @@ class ChannelAttributionMixin(object):
         self.costs = cost_feature
         self.sep = separator
 
-    def _derive_attributes(self, df):
+    def _get_internals(self, df):
         """Derives attributes used to identify which
         features are available to the Channel Attribution models."""
         self._paths = df.loc[:, self.paths].values

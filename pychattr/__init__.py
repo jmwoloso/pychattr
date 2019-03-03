@@ -9,7 +9,7 @@ streamlined sklearn-like API.
 """
 from .models.channel_attribution import HeurisiticModel
 
-from pychattr._internal._utils import ChannelAttributionMixin
+from pychattr.models.channel_attribution.internal.utils import ChannelAttributionMixin
 
 
 #TODO: versioning
