@@ -18,8 +18,8 @@ class ChannelAttributionMixin(object):
         self.sep = separator
 
     def _derive_attributes(self, df):
-        """Derives attributes used to identify which components to
-        include in the heuristic model."""
+        """Derives attributes used to identify which
+        features are available to the Channel Attribution models."""
         self._paths = df.loc[:, self.paths].values
         self._conversions = df.loc[:, self.conversions].values
         self._revenues_ = df.loc[:, self.revenues].values if \
