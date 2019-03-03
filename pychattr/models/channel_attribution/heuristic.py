@@ -4,10 +4,14 @@ used in channel attribution.
 
 see: https://www.bizible.com/blog/multi-touch-attribution-full-debrief
 """
-from .internal import ChannelAttributionMixin
+
+from .internal.utils import HeuristicModelMixin, \
+    make_touch_point_dict, get_touch_point_values
+
+from .internal.utils.heuristic import fit_heuristic_models
 
 
-class HeurisiticModel(ChannelAttributionMixin):
+class HeuristicModel(HeuristicModelMixin):
     """
     Heuristic Channel attribution models.
 
@@ -75,7 +79,6 @@ class HeurisiticModel(ChannelAttributionMixin):
     ----------
     https://www.bizible.com/blog/multi-touch-attribution-full-debrief
     """
-
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
                  separator=">>>", first_touch=True,
@@ -104,11 +107,10 @@ class HeurisiticModel(ChannelAttributionMixin):
         # modeling
         #TODO: param/input validation
 
+        # fit the specified heuristic models
+        self.results_ = fit_heuristic_models(self._heuristics)
 
-
-        # container to hold the resulting models
-        self.results_ = None
-
+        return self
 
 
 
