@@ -8,20 +8,33 @@ class ChannelAttributionMixin(object):
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
                  separator=">>>"):
-        self.paths = path_feature
-        self.conversions = conversion_feature
-        self.revenues = revenue_feature
-        self.costs = cost_feature
+        self.path = path_feature
+        self.conversion = conversion_feature
+        self.revenue = revenue_feature
+        self.cost = cost_feature
         self.sep = separator
 
     def _get_internals(self, df):
-        """Derives attributes used to identify which
-        features are available to the Channel Attribution models."""
-        self._paths = df.loc[:, self.paths].values
-        self._conversions = df.loc[:, self.conversions].values
-        self._revenues_ = df.loc[:, self.revenues].values if \
-            self.revenues else None
-        self._costs = df.loc[:, self.costs].values if self.costs else \
+        """Derives internal attributes used during model
+        construction."""
+        # aggregate the paths
+        df_ = df.copy()
+        aggregations = {
+            self.conversion: "sum",
+        }
+        if self.revenue:
+            aggregations[self.revenue] = "sum"
+        if self.cost:
+            aggregations[self.cost] = "sum"
+
+        gb = df_.groupby([self.path], as_index=False).agg(aggregations)
+
+        # get the individual values
+        self._paths = gb.loc[:, self.path].values
+        self._conversions = gb.loc[:, self.conversion].values
+        self._revenues = gb.loc[:, self.revenue].values if \
+            self.revenue else None
+        self._costs = gb.loc[:, self.cost].values if self.cost else \
             None
 
 
