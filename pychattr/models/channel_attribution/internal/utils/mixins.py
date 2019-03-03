@@ -23,3 +23,41 @@ class ChannelAttributionMixin(object):
             self.revenues else None
         self._costs = df.loc[:, self.costs].values if self.costs else \
             None
+
+
+class HeuristicModelMixin(ChannelAttributionMixin):
+    def _get_internals(self, df):
+        """Extends the inherited method for heuristic-specifc
+        internals."""
+        # call to parent method
+        super()._get_internals(df)
+
+        # extensions
+        heuristics = []
+        if self.first:
+            heuristics.append("first_touch")
+        if self.last:
+            heuristics.append("last_touch")
+        if self.linear:
+            heuristics.append("linear_touch")
+        if self.time:
+            heuristics.append("time_decay")
+        if self.u:
+            heuristics.append("u_shaped")
+        if self.w:
+            heuristics.append("w_shaped")
+        if self.z:
+            heuristics.append("z_shaped")
+        if self.ensemble:
+            heuristics.append("ensemble_model")
+        self._heuristics = heuristics
+
+        return self
+
+
+
+class MarkovModelMixin(ChannelAttributionMixin):
+    def _get_internals(self, df):
+        """Extends the inherited method for markov-specific
+        internals."""
+        pass
