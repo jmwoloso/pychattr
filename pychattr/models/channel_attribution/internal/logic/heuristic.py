@@ -1,36 +1,40 @@
 
 
-
-
-
-def _first_touch():
+def first_touch_model():
     """First-touch attribution model."""
     pass
 
-def _last_touch():
+
+def last_touch_model():
     """Last-touch attribution model."""
     pass
 
-def _linear_touch():
+
+def linear_touch_model():
     """Linear touch attribution model."""
     pass
 
-def _time_decay():
+
+def time_decay_model():
     """Time decay attribution model."""
     pass
 
-def _u_shaped():
+
+def u_shaped_model():
     """U-shaped attribution model."""
     pass
 
-def _w_shaped():
+
+def w_shaped_model():
     """W-shaped attribution model."""
     pass
 
-def _z_shaped():
+
+def z_shaped_model():
     """Z-shaped (full path) attribution model."""
     pass
 
-def _ensemble():
+
+def ensemble_model():
     """Blended version of all the selected heuristic models."""
     pass
