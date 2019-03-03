@@ -4,6 +4,7 @@ used in channel attribution.
 
 see: https://www.bizible.com/blog/multi-touch-attribution-full-debrief
 """
+from pychattr._internal._utils import ChannelAttributionMixin
 
 
 def _first_touch():
@@ -39,13 +40,30 @@ def _ensemble():
     pass
 
 
-class HeurisiticModel(object):
+class HeurisiticModel(ChannelAttributionMixin):
     """
-    Class for the Heuristic (First-touch, Last-touch,
-    Linear-touch, etc.) channel attribution models.
+    Class wrapper for the heuristic channel attribution models.
 
     Parameters
     ----------
+        path_feature: string; required.
+        The name of the feature containing the paths.
+
+    conversion_feature: string; required.
+        The name of the feature containing the number of
+        conversions for each path.
+
+    revenue_feature: string; optional.
+        The name of the feature containing the revenue generated
+        for each path.
+
+    cost_feature: string; optional.
+        The name of the feature containing the cost incurred for
+        each path.
+
+    separator: string; required.
+        The symbol used to separate the touch points in each path.
+
     first_touch: boolean; required.
         Whether to calculate the first-touch heuristic model.
 
@@ -91,10 +109,14 @@ class HeurisiticModel(object):
     https://www.bizible.com/blog/multi-touch-attribution-full-debrief
     """
 
-    def __init__(self,first_touch=True,
+    def __init__(self, path_feature, conversion_feature,
+                 revenue_feature=None, cost_feature=None,
+                 separator=">>>", first_touch=True,
                  last_touch=True, linear_touch=True, time_decay=True,
                  u_shaped=True, w_shaped=True, z_shaped=True,
                  ensemble_results=True):
+        super().__init__(path_feature, conversion_feature,
+                         revenue_feature, cost_feature, separator)
 
         self.first = first_touch
         self.last = last_touch
@@ -107,7 +129,7 @@ class HeurisiticModel(object):
 
     def fit(self, dataframe=None):
         """Fit the specified heuristic models."""
-        self._
+        # self._
         # derive attributes that will be used during model construction
         self._derive_attributes(dataframe)
 
@@ -115,7 +137,7 @@ class HeurisiticModel(object):
         # modeling
 
         # container to hold the resulting models
-        self.results_ =
+        self.results_ = None
 
 
     def _derive_attributes(self, df):
