@@ -79,6 +79,8 @@ def fit_model(df, paths, conversions, revenues, costs,
                 lambda s: s.split(sep)
             )
 
+            weight = 1 / len(channels)
+
             # dataframe to hold the values for each channel for this
             # iteration
             d_ = pd.DataFrame({
@@ -86,15 +88,15 @@ def fit_model(df, paths, conversions, revenues, costs,
             })
 
             d_.loc[:, "linear_touch_conversions"] = \
-                df.loc[i, conv_f] / len(channels)
+                weight * df.loc[i, conv_f]
 
             if has_rev:
                 d_.loc[:, "linear_touch_revenue"] = \
-                    df.loc[i, rev_f] / len(channels)
+                    weight * df.loc[i, rev_f]
 
             if has_cost:
                 d_.loc[:, "linear_touch_cost"] = \
-                    df.loc[i, cost_f] / len(channels)
+                    weight * df.loc[i, cost_f]
             results.append(d_)
 
         # combine the results
@@ -108,11 +110,89 @@ def fit_model(df, paths, conversions, revenues, costs,
                                   "available in the next minor "
                                   "release of pychattr.")
 
-    def u_shaped_model(paths, conversions, revenues, costs, separator):
+    def u_shaped_model(df, path_f, conv_f, sep, rev_f=None,
+                       cost_f=None):
         """U-shaped attribution model."""
-        raise NotImplementedError("This model specification will be "
-                                  "available in the next minor "
-                                  "release of pychattr.")
+        # container to hold the resulting dataframes
+        results = []
+
+        # aggregations to perform prior to sending results back
+        aggs = {
+            "u_shaped_conversions": "sum"
+        }
+
+        has_rev = True if rev_f in df.columns else False
+        has_cost = True if cost_f in df.columns else False
+
+        if has_rev:
+            aggs["u_shaped_revenue"] = "sum"
+
+        if has_cost:
+            aggs["u_shaped_cost"] = "sum"
+
+        paths = df.loc[:, path_f].values
+
+        # iterate through the paths and calculate the linear touch model
+        for i in range(len(paths)):
+            # split the current path into individual channels
+            channels = pd.Series(paths[i]).apply(
+                lambda s: s.split(sep)
+            )
+
+            # get the indices of the channels to apply weights
+            # appropriately
+            idx = list(range(len(channels)))
+
+            # capture the first index
+            first_idx = idx[0]
+            # remove it from the list
+            idx.pop(0)
+
+            # capture the last index
+            last_idx = idx[-1]
+            # remove it from the list
+            idx.pop(-1)
+
+            weight1 = 0.2 / len(idx)
+            weight2 = 0.4
+
+            # dataframe to hold the values for each channel for this
+            # iteration
+            d_ = pd.DataFrame({
+                "channel": channels
+            })
+
+            # transfer over the values first
+            d_.loc[:, "u_shaped_conversions"] = \
+                df.loc[i, conv_f].copy()
+            # now apply the correct weights; first and last get 40%
+            d_.loc[[first_idx, last_idx], "u_shaped_conversions"] *= \
+                weight2
+            # the remaining channels split 20%
+            d_.loc[idx, "u_shaped_conversions"] *= weight1
+
+            if has_rev:
+                d_.loc[:, "u_shaped_revenue"] = \
+                    df.loc[i, rev_f].copy()
+                d_.loc[[first_idx, last_idx], "u_shaped_revenue"] *= \
+                    weight2
+                d_.loc[idx, "u_shaped_revenue"] *= weight1
+
+            if has_cost:
+                d_.loc[:, "u_shaped_cost"] = \
+                    df.loc[i, cost_f].copy()
+                d_.loc[[first_idx, last_idx], "u_shaped_cost"] *= \
+                    weight2
+                d_.loc[idx, "u_shaped_cost"] *= weight1
+
+            # "fix" the first and last channel to meet their 40% share
+
+            results.append(d_)
+
+        # combine the results
+        df_ = pd.concat(results, axis=0)
+
+        return df_.groupby(["channel"], as_index=False).agg(aggs)
 
     def w_shaped_model(paths, conversions, revenues, costs, separator):
         """W-shaped attribution model."""
