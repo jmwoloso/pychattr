@@ -108,7 +108,14 @@ class HeuristicModel(HeuristicModelMixin):
         #TODO: param/input validation
 
         # fit the specified heuristic models
-        self.results_ = fit_heuristic_models(self._heuristics)
+        self.results_ = fit_heuristic_models(
+            self._heuristics,
+            self._paths,
+            self._conversions,
+            self._revenues,
+            self._costs,
+            self.sep
+        )
 
         return self
 

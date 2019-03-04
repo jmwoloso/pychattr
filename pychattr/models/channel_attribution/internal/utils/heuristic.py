@@ -2,39 +2,29 @@
 heuristic.py: Various utility functions used during construction of
 the heuristic models.
 """
-from ..logic.heuristic import first_touch_model, last_touch_model, \
-    linear_touch_model, time_decay_model, u_shaped_model, \
-    w_shaped_model, z_shaped_model, ensemble_model
+from ..logic.heuristic import fit_model
 
 
-def fit_heuristic_models(heuristics):
+def fit_heuristic_models(heuristics, paths, conversions,
+                         revenues, costs, separator):
     """
     Fits the specified heuristic models.
     """
     for heuristic in heuristics:
         results = {}
-        if heuristic == "linear_touch":
-            model = first_touch_model()
-        if heuristic == "last_touch":
-            model = last_touch_model()
-        if heuristic == "linear_touch":
-            model = linear_touch_model()
-        if heuristic == "time_decay":
-            model = time_decay_model()
-        if heuristic == "u_shaped":
-            model = u_shaped_model()
-        if heuristic == "w_shaped":
-            model = w_shaped_model()
-        if heuristic == "z_shaped":
-            model = z_shaped_model()
+        if heuristic == "ensemble_model":
+            # TODO: might want to break this out of the partial
+            #  application function (fit_model)
+            model = fit_model(paths, conversions, revenues, costs,
+                              separator, heuristic=heuristic)
+
+        model = fit_model(paths, conversions, revenues, costs,
+                          separator, heuristic=heuristic)
 
         # the results of the current model to the results dict
         results[heuristic] = model
 
-        # fit the ensemble model if specified
-        if heuristic == "ensemble_model":
-            pass
-
+        return results
 
 
 def make_touch_point_dict(touch_point):
@@ -94,12 +84,3 @@ def get_touch_point_values(touch_point_dict, touch_point,
                 touch_point_dict[tp][cost_key] += cost_value
 
     return touch_point_dict
-
-
-
-
-
-def _validate_heuristic_inputs():
-    """Validates the inputs"""
-    pass
-
