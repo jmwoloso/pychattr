@@ -1,11 +1,11 @@
-from .heuristic import HeurisiticModel
+from .heuristic import HeuristicModel
 from .markov import MarkovModel
 from .shapley import ShapleyModel
 
 
 
 __all__ = [
-    "HeurisiticModel",
+    "HeuristicModel",
     "MarkovModel",
     "ShapleyModel"
 ]

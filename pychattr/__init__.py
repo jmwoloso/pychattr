@@ -7,9 +7,7 @@ marketing attribution models including Heurisitic (e.g. first-touch,
 last-touch, etc.), Markov Chain, Shapley Value and Halo Effect via a
 streamlined sklearn-like API.
 """
-from .models.channel_attribution import HeurisiticModel
-
-from pychattr.models.channel_attribution.internal.utils import ChannelAttributionMixin
+from .models.channel_attribution import HeuristicModel
 
 
 #TODO: versioning
@@ -23,5 +21,5 @@ __maintainer__ = "Jason Wolosonovich, Brett Nebeker, Abhi Sivasailam " \
 __email__ = "pychattr@avaland.io"
 
 __all__ = [
-    "HeurisiticModel",
+    "HeuristicModel",
 ]
