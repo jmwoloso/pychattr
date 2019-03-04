@@ -1,17 +1,36 @@
-from functools import partial
+import functools
+import collections
+
+import numpy as np
+import pandas as pd
 
 
 def fit_model(paths, conversions, revenues, costs,
               separator, heuristic="first_touch"):
-
     """Generates the specified heuristic model via the principle of
     partial application."""
 
-    def first_touch_model(paths, conversions, revenues, costs, separator):
+    def first_touch_model(df, path_f, conv_f, sep, rev_f=None,
+                          cost_f=None):
         """First-touch attribution model."""
-        raise NotImplementedError("This model specification will be "
-                                  "available in the next minor "
-                                  "release of pychattr.")
+        df_ = pd.DataFrame(columns=["channel"])
+
+        results = collections.defaultdict(dict)
+
+        has_rev = True if rev_f in df.columns else False
+        has_cost = True if cost_f in df.columns else False
+
+        df_.loc[:, "channel"] = df.loc[:, path_f].apply(
+            lambda s: s.split(sep)[0]
+        )
+
+        df_.loc[:, "first_touch_conversions"] = df.loc[:, conv_f].copy()
+        if has_rev:
+            df_.loc[:, "first_touch_revenue"] = df.loc[:, rev_f].copy()
+        if has_cost:
+            df_.loc[:, "first_touch_cost"] = df.loc[:, cost_f].copy()
+
+        return df_
 
     def last_touch_model(paths, conversions, revenues, costs, separator):
         """Last-touch attribution model."""
@@ -58,5 +77,5 @@ def fit_model(paths, conversions, revenues, costs,
     # TODO: is there a cleaner way to do this?
     f = "{}_model".format(heuristic)
 
-    return partial(eval(f), paths, conversions, revenues, costs,
-                   separator)
+    return functools.partial(eval(f), paths, conversions, revenues,
+                             costs, separator)
