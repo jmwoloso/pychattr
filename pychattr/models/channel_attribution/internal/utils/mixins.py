@@ -61,7 +61,6 @@ class HeuristicModelMixin(ChannelAttributionMixin):
         return self
 
 
-
 class MarkovModelMixin(ChannelAttributionMixin):
     def _get_internals(self, df):
         """Extends the inherited method for markov-specific

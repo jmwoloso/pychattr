@@ -7,8 +7,8 @@ import pandas as pd
 
 def fit_model(paths, conversions, revenues, costs,
               separator, heuristic="first_touch"):
-    """Generates the specified heuristic model via the principle of
-    partial application."""
+    """Generates the specified heuristic model using partial
+    application."""
 
     def first_touch_model(df, path_f, conv_f, sep, rev_f=None,
                           cost_f=None):
@@ -30,11 +30,25 @@ def fit_model(paths, conversions, revenues, costs,
 
         return df_
 
-    def last_touch_model(paths, conversions, revenues, costs, separator):
+    def last_touch_model(df, path_f, conv_f, sep, rev_f=None,
+                         cost_f=None):
         """Last-touch attribution model."""
-        raise NotImplementedError("This model specification will be "
-                                  "available in the next minor "
-                                  "release of pychattr.")
+        df_ = pd.DataFrame(columns=["channel"])
+
+        has_rev = True if rev_f in df.columns else False
+        has_cost = True if cost_f in df.columns else False
+
+        df_.loc[:, "channel"] = df.loc[:, path_f].apply(
+            lambda s: s.split(sep)[-1]
+        )
+
+        df_.loc[:, "last_touch_conversions"] = df.loc[:, conv_f].copy()
+        if has_rev:
+            df_.loc[:, "last_touch_revenue"] = df.loc[:, rev_f].copy()
+        if has_cost:
+            df_.loc[:, "last_touch_cost"] = df.loc[:, cost_f].copy()
+
+        return df_
 
     def linear_touch_model(paths, conversions, revenues, costs, separator):
         """Linear touch attribution model."""
