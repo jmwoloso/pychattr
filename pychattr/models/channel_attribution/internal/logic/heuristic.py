@@ -15,8 +15,6 @@ def fit_model(paths, conversions, revenues, costs,
         """First-touch attribution model."""
         df_ = pd.DataFrame(columns=["channel"])
 
-        results = collections.defaultdict(dict)
-
         has_rev = True if rev_f in df.columns else False
         has_cost = True if cost_f in df.columns else False
 
@@ -77,5 +75,5 @@ def fit_model(paths, conversions, revenues, costs,
     # TODO: is there a cleaner way to do this?
     f = "{}_model".format(heuristic)
 
-    return functools.partial(eval(f), paths, conversions, revenues,
-                             costs, separator)
+    return functools.partial(eval(f), paths, conversions, separator,
+                             rev_f=revenues, cost_f=costs)

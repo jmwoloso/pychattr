@@ -99,7 +99,7 @@ class HeuristicModel(HeuristicModelMixin):
 
     def fit(self, df):
         """Fit the specified heuristic models."""
-        # derive intenal attributes that will be used during model
+        # derive internal attributes that will be used during model
         # construction
         self._get_internals(df)
 
@@ -110,10 +110,10 @@ class HeuristicModel(HeuristicModelMixin):
         # fit the specified heuristic models
         self.results_ = fit_heuristic_models(
             self._heuristics,
-            self._paths,
-            self._conversions,
-            self._revenues,
-            self._costs,
+            self.paths,
+            self.conversions,
+            self.revenues,
+            self.costs,
             self.sep
         )
 

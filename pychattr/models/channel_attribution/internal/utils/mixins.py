@@ -8,10 +8,10 @@ class ChannelAttributionMixin(object):
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
                  separator=">>>"):
-        self.path = path_feature
-        self.conversion = conversion_feature
-        self.revenue = revenue_feature
-        self.cost = cost_feature
+        self.paths = path_feature
+        self.conversions = conversion_feature
+        self.revenues = revenue_feature
+        self.costs = cost_feature
         self.sep = separator
 
     def _get_internals(self, df):
@@ -20,22 +20,15 @@ class ChannelAttributionMixin(object):
         # aggregate the paths
         df_ = df.copy()
         aggregations = {
-            self.conversion: "sum",
+            self.conversions: "sum",
         }
-        if self.revenue:
-            aggregations[self.revenue] = "sum"
-        if self.cost:
-            aggregations[self.cost] = "sum"
+        if self.revenues:
+            aggregations[self.revenues] = "sum"
+        if self.costs:
+            aggregations[self.costs] = "sum"
 
-        gb = df_.groupby([self.path], as_index=False).agg(aggregations)
-
-        # get the individual values
-        self._paths = gb.loc[:, self.path].values
-        self._conversions = gb.loc[:, self.conversion].values
-        self._revenues = gb.loc[:, self.revenue].values if \
-            self.revenue else None
-        self._costs = gb.loc[:, self.cost].values if self.cost else \
-            None
+        self.df_ = df_.groupby([self.paths], as_index=False).agg(
+            aggregations)
 
 
 class HeuristicModelMixin(ChannelAttributionMixin):
