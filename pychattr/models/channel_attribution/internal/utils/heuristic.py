@@ -6,7 +6,7 @@ import pandas as pd
 from ..logic.heuristic import fit_model
 
 
-def fit_heuristic_models(heuristics, paths, conversions,
+def fit_heuristic_models(heuristics, df, paths, conversions,
                          revenues, costs, separator):
     """
     Fits the specified heuristic models.
@@ -16,10 +16,10 @@ def fit_heuristic_models(heuristics, paths, conversions,
         if heuristic == "ensemble_model":
             # TODO: might want to break this out of the partial
             #  application function (fit_model)
-            model = fit_model(paths, conversions, revenues, costs,
+            model = fit_model(df, paths, conversions, revenues, costs,
                               separator, heuristic=heuristic)
 
-        model = fit_model(paths, conversions, revenues, costs,
+        model = fit_model(df, paths, conversions, revenues, costs,
                           separator, heuristic=heuristic)
 
         # the results of the current model to the results dict
@@ -27,5 +27,3 @@ def fit_heuristic_models(heuristics, paths, conversions,
 
     # combine the results and return
     return pd.concat(results)
-
-

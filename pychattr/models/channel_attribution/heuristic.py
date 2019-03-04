@@ -110,6 +110,7 @@ class HeuristicModel(HeuristicModelMixin):
         # fit the specified heuristic models
         self.results_ = fit_heuristic_models(
             self._heuristics,
+            self.df_,
             self.paths,
             self.conversions,
             self.revenues,
