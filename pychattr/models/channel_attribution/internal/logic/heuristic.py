@@ -1,17 +1,15 @@
 import functools
-import collections
 
-import numpy as np
 import pandas as pd
 
 
 def fit_model(df, paths, conversions, revenues, costs,
-              separator, heuristic="first_touch"):
+              sep, half_life, lead_stage, oppty_stage,
+              heuristic="first_touch"):
     """Generates the specified heuristic model using partial
     application."""
 
-    def first_touch_model(df, path_f, conv_f, sep, rev_f=None,
-                          cost_f=None):
+    def first_touch(df, path_f, conv_f, sep, rev_f=None, cost_f=None):
         """First-touch attribution model."""
         df_ = pd.DataFrame(columns=["channel"])
 
@@ -30,8 +28,7 @@ def fit_model(df, paths, conversions, revenues, costs,
 
         return df_
 
-    def last_touch_model(df, path_f, conv_f, sep, rev_f=None,
-                         cost_f=None):
+    def last_touch(df, path_f, conv_f, sep, rev_f=None, cost_f=None):
         """Last-touch attribution model."""
         df_ = pd.DataFrame(columns=["channel"])
 
@@ -50,8 +47,7 @@ def fit_model(df, paths, conversions, revenues, costs,
 
         return df_
 
-    def linear_touch_model(df, path_f, conv_f, sep, rev_f=None,
-                           cost_f=None):
+    def linear_touch(df, path_f, conv_f, sep, rev_f=None, cost_f=None):
         """Linear touch attribution model."""
         # container to hold the resulting dataframes
         results = []
@@ -104,14 +100,7 @@ def fit_model(df, paths, conversions, revenues, costs,
 
         return df_.groupby(["channel"], as_index=False).agg(aggs)
 
-    def time_decay_model(paths, conversions, revenues, costs, separator):
-        """Time decay attribution model."""
-        raise NotImplementedError("This model specification will be "
-                                  "available in the next minor "
-                                  "release of pychattr.")
-
-    def u_shaped_model(df, path_f, conv_f, sep, rev_f=None,
-                       cost_f=None):
+    def u_shaped(df, path_f, conv_f, sep, rev_f=None, cost_f=None):
         """U-shaped attribution model."""
         # container to hold the resulting dataframes
         results = []
@@ -194,13 +183,22 @@ def fit_model(df, paths, conversions, revenues, costs,
 
         return df_.groupby(["channel"], as_index=False).agg(aggs)
 
-    def w_shaped_model(paths, conversions, revenues, costs, separator):
+    def time_decay(df, path_f, conv_f, sep, half_life, rev_f=None,
+                   cost_f=None):
+        """Time decay attribution model."""
+        raise NotImplementedError("This model specification will be "
+                                  "available in the next minor "
+                                  "release of pychattr.")
+
+    def w_shaped(df, path_f, conv_f, sep, lead_stage, rev_f=None,
+                 cost_f=None):
         """W-shaped attribution model."""
         raise NotImplementedError("This model specification will be "
                                   "available in the next minor "
                                   "release of pychattr.")
 
-    def z_shaped_model(paths, conversions, revenues, costs, separator):
+    def z_shaped(df, path_f, conv_f, sep, oppty_stage, rev_f=None,
+                 cost_f=None):
         """Z-shaped (full path) attribution model."""
         raise NotImplementedError("This model specification will be "
                                   "available in the next minor "
@@ -213,7 +211,21 @@ def fit_model(df, paths, conversions, revenues, costs,
                                   "release of pychattr.")
 
     # TODO: is there a cleaner way to do this?
-    f = "{}_model".format(heuristic)
 
-    return functools.partial(eval(f), df, paths, conversions, separator,
-                             rev_f=revenues, cost_f=costs)
+    # the first three models need extra parameters sent to them
+    if heuristic == "time_decay":
+        f = functools.partial(eval(heuristic), df, paths, conversions,
+                              sep, half_life, rev_f=revenues,
+                              cost_f=costs)
+    elif heuristic == "w_shaped":
+        f = functools.partial(eval(heuristic), df, paths, conversions,
+                              sep, lead_stage, rev_f=revenues,
+                              cost_f=costs)
+    elif heuristic == "z_shaped":
+        f = functools.partial(eval(heuristic), df, paths, conversions,
+                              sep, oppty_stage, rev_f=revenues,
+                              cost_f=costs)
+    else:
+        f = functools.partial(eval(heuristic), df, paths, conversions,
+                              sep, rev_f=revenues, cost_f=costs)
+    return f

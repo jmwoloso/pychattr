@@ -7,7 +7,8 @@ from ..logic.heuristic import fit_model
 
 
 def fit_heuristic_models(heuristics, df, paths, conversions,
-                         revenues, costs, separator):
+                         revenues, costs, sep, half_life, lead_stage,
+                         oppty_stage):
     """
     Fits the specified heuristic models.
     """
@@ -17,10 +18,12 @@ def fit_heuristic_models(heuristics, df, paths, conversions,
             # TODO: might want to break this out of the partial
             #  application function (fit_model)
             model = fit_model(df, paths, conversions, revenues, costs,
-                              separator, heuristic=heuristic)
+                              sep, half_life, lead_stage, oppty_stage,
+                              heuristic=heuristic)
 
         model = fit_model(df, paths, conversions, revenues, costs,
-                          separator, heuristic=heuristic)
+                          sep, half_life, lead_stage, oppty_stage,
+                          heuristic=heuristic)
 
         # the results of the current model to the results dict
         results.append(model)
