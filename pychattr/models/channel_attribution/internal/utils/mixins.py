@@ -69,8 +69,6 @@ class HeuristicModelMixin(ChannelAttributionMixin):
             heuristics.append("last_touch")
         if self.linear:
             heuristics.append("linear_touch")
-        if self.non_direct:
-            heuristics.append("last_touch_non_direct")
         if self.time:
             heuristics.append("time_decay")
         if self.u:

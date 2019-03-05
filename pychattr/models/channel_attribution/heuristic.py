@@ -26,14 +26,14 @@ class HeuristicModel(HeuristicModelMixin):
       NOTE: The values contained within this feature must be
       binary/boolean.
 
-    revenue_feature: string; optional.
+    revenue_feature: string; default=None; optional.
       The name of the feature containing the revenue generated
       for each path.
 
       NOTE: The values contained within this feature
       must be numeric.
 
-    cost_feature: string; optional.
+    cost_feature: string; default=None; optional.
       The name of the feature containing the cost incurred for
       each path.
 
@@ -43,28 +43,21 @@ class HeuristicModel(HeuristicModelMixin):
     separator: string; default=">>>"; required.
       The symbol used to separate the channels in each path.
 
-    first_touch: boolean; default=True; required.
+    first_touch: boolean; default=True.
       Whether to calculate the first-touch heuristic model.
 
-    last_touch: boolean; default=True; required.
+    last_touch: boolean; default=True.
       Whether to calculate the last-touch heuristic model.
 
-    linear_touch: boolean; default=True; required.
+    linear_touch: boolean; default=True.
       Whether to calculate the linear-touch heuristic model.
 
-    last_touch_non_direct: boolean; default=False; required.
-      Whether to calculate the last-touch heuristic model while
-      excluding the direct channel.
-
-      NOTE: When using this model, the `direct_channel` parameter must be
-      set or the model-fitting will not proceed.
-
-    u_shaped: boolean; default=False; required.
+    u_shaped: boolean; default=False.
       Whether to calculate the u-shaped heuristic model, also known as
       the position-based model. This model is typically used when the
       conversion event represents lead-creation.
 
-    w_shaped: boolean; default=False required.
+    w_shaped: boolean; default=False.
       Whether to calculate the w-shaped heuristic model. This model is
       typically used when the paths contain the lead-creation and
       opportunity-creation stages.
@@ -72,7 +65,7 @@ class HeuristicModel(HeuristicModelMixin):
       NOTE: When using this model the `lead_channel` parameter must be
       set to ensure the weights are applied correctly.
 
-    z_shaped: boolean; required.
+    z_shaped: boolean; default=False.
       Whether to calculate the z-shaped heuristic model, also known as
       the full-path model. This model is typically used to measure the
       full path from first-touch to the customer-close stage.
@@ -80,7 +73,7 @@ class HeuristicModel(HeuristicModelMixin):
       NOTE: When using this model the `opportunity_stage` parameter
       must be set to ensure the weights are applied correctly.
 
-    time_decay: boolean; required.
+    time_decay: boolean; default=False.
       Whether to calculate the time-decay heuristic model. This model
       assigns more credit to channels that occur closer to the
       conversion event. By nature, this model will downplay the
@@ -94,21 +87,25 @@ class HeuristicModel(HeuristicModelMixin):
       `opportunity_stage` parameters will be checked and applied if
       found.
 
-    ensemble_results: boolean; required.
+    ensemble_results: boolean; default=True.
       Whether to create an ensemble of the resulting models.
+
+    exclude_direct: boolean; default=False; optional.
+      Whether to exclude the direct channel during the model fitting
+      process. If `True`, then `direct_channel` must be specified.
+
+    direct_channel: string; default=None; required if
+      `last_touch_non_direct=True`.
+      The name of the direct channel within the paths of the dataset.
 
     lead_channel: string; default=None; required if `w_shaped=True`.
       The name of the channel representing lead-creation within the
       paths of the dataset.
 
-    opportunity_stage: string; default=None; required if
+    opportunity_channel: string; default=None; required if
       `z_shaped=True`.
       The name of the channel representing opportunity-creation within
       the paths of the dataset.
-
-    direct_channel: string; default=None; required if
-      `last_touch_non_direct=True`.
-      The name of the direct channel within the paths of the dataset.
 
     half_life: int; default=7; ignored if `time_decay=False`.
       The number of days to use in calculating the weights for each
@@ -156,11 +153,11 @@ class HeuristicModel(HeuristicModelMixin):
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
                  separator=">>>", first_touch=True, last_touch=True,
-                 linear_touch=True, last_touch_non_direct=False,
-                 u_shaped=False, w_shaped=False, z_shaped=False,
-                 time_decay=False, ensemble_results=True,
-                 lead_channel=None, opportunity_channel=None,
-                 direct_channel=None, half_life=7,
+                 linear_touch=True, u_shaped=False, w_shaped=False,
+                 z_shaped=False, time_decay=False,
+                 ensemble_results=True, exclude_direct=False,
+                 direct_channel=None, lead_channel=None,
+                 opportunity_channel=None, half_life=7,
                  path_dates_feature=None,
                  conversion_dates_feature=None):
         super().__init__(path_feature, conversion_feature,
@@ -169,15 +166,15 @@ class HeuristicModel(HeuristicModelMixin):
         self.first = first_touch
         self.last = last_touch
         self.linear = linear_touch
-        self.non_direct = last_touch_non_direct
         self.u = u_shaped
         self.w = w_shaped
         self.z = z_shaped
         self.time = time_decay
         self.ensemble = ensemble_results
+        self.direct = exclude_direct
+        self.direct_channel = direct_channel
         self.lead_channel = lead_channel
         self.oppty_channel = opportunity_channel
-        self.direct_channel = direct_channel
         self.half_life = half_life
         self.path_dates = path_dates_feature
         self.conv_dates = conversion_dates_feature
@@ -200,9 +197,10 @@ class HeuristicModel(HeuristicModelMixin):
             self.sep,
             revenues=self.revenues,
             costs=self.costs,
+            exclude_direct=self.direct,
+            direct_channel=self.direct_channel,
             lead_channel=self.lead_channel,
             oppty_channel=self.oppty_channel,
-            direct_channel=self.direct_channel,
             half_life=self.half_life,
             path_dates=self.path_dates,
             conv_dates=self.conv_dates
