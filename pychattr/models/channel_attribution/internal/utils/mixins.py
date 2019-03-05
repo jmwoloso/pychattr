@@ -4,6 +4,7 @@ various model specifications.
 """
 from abc import abstractmethod
 
+
 class ChannelAttributionMixin(object):
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,

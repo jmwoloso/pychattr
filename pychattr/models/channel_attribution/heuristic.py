@@ -56,7 +56,7 @@ class HeuristicModel(HeuristicModelMixin):
       Whether to calculate the last-touch heuristic model while
       excluding the direct channel.
 
-      NOTE: When using this model, the `direct_stage` parameter must be
+      NOTE: When using this model, the `direct_channel` parameter must be
       set or the model-fitting will not proceed.
 
     u_shaped: boolean; default=False; required.
@@ -69,7 +69,7 @@ class HeuristicModel(HeuristicModelMixin):
       typically used when the paths contain the lead-creation and
       opportunity-creation stages.
 
-      NOTE: When using this model the `lead_stage` parameter must be
+      NOTE: When using this model the `lead_channel` parameter must be
       set to ensure the weights are applied correctly.
 
     z_shaped: boolean; required.
@@ -90,14 +90,14 @@ class HeuristicModel(HeuristicModelMixin):
       `path_dates_feature` and `conversion_dates_feature` parameters
       must be set as they are used to calculate the number of days
       between the channel event and the conversion event during
-      model-fitting. Additionally, the `lead_stage` and
+      model-fitting. Additionally, the `lead_channel` and
       `opportunity_stage` parameters will be checked and applied if
       found.
 
     ensemble_results: boolean; required.
       Whether to create an ensemble of the resulting models.
 
-    lead_stage: string; default=None; required if `w_shaped=True`.
+    lead_channel: string; default=None; required if `w_shaped=True`.
       The name of the channel representing lead-creation within the
       paths of the dataset.
 
@@ -106,7 +106,7 @@ class HeuristicModel(HeuristicModelMixin):
       The name of the channel representing opportunity-creation within
       the paths of the dataset.
 
-    direct_stage: string; default=None; required if
+    direct_channel: string; default=None; required if
       `last_touch_non_direct=True`.
       The name of the direct channel within the paths of the dataset.
 
@@ -159,8 +159,8 @@ class HeuristicModel(HeuristicModelMixin):
                  linear_touch=True, last_touch_non_direct=False,
                  u_shaped=False, w_shaped=False, z_shaped=False,
                  time_decay=False, ensemble_results=True,
-                 lead_stage=None, opportunity_stage=None,
-                 direct_stage=None, half_life=7,
+                 lead_channel=None, opportunity_channel=None,
+                 direct_channel=None, half_life=7,
                  path_dates_feature=None,
                  conversion_dates_feature=None):
         super().__init__(path_feature, conversion_feature,
@@ -175,9 +175,9 @@ class HeuristicModel(HeuristicModelMixin):
         self.z = z_shaped
         self.time = time_decay
         self.ensemble = ensemble_results
-        self.lead_stage = lead_stage
-        self.oppty_stage = opportunity_stage
-        self.direct_stage = direct_stage
+        self.lead_channel = lead_channel
+        self.oppty_channel = opportunity_channel
+        self.direct_channel = direct_channel
         self.half_life = half_life
         self.path_dates = path_dates_feature
         self.conv_dates = conversion_dates_feature
@@ -200,9 +200,9 @@ class HeuristicModel(HeuristicModelMixin):
             self.sep,
             revenues=self.revenues,
             costs=self.costs,
-            lead_stage=self.lead_stage,
-            oppty_stage=self.oppty_stage,
-            direct_stage=self.direct_stage,
+            lead_channel=self.lead_channel,
+            oppty_channel=self.oppty_channel,
+            direct_channel=self.direct_channel,
             half_life=self.half_life,
             path_dates=self.path_dates,
             conv_dates=self.conv_dates

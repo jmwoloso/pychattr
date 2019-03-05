@@ -4,8 +4,8 @@ import pandas as pd
 
 
 def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
-              costs=None, lead_stage=None, oppty_stage=None,
-              direct_stage=None, half_life=7, path_dates=None,
+              costs=None, lead_channel=None, oppty_channel=None,
+              direct_channel=None, half_life=7, path_dates=None,
               conv_dates=None):
     """Generates the specified heuristic model using partial
     application."""
@@ -101,12 +101,56 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
 
         return df_.groupby(["channel"], as_index=False).agg(aggs)
 
-    def last_touch_non_direct(df, path_f, conv_f, sep, direct_stage,
-                              rev_f=None, cost_f=None):
+    def last_touch_non_direct(df, path_f, conv_f, sep, direct_channel,
+                              heuristics, rev_f=None, cost_f=None):
         """Last-touch (excluding Direct channel) attribution model."""
-        raise NotImplementedError("This model specification will be "
-                                  "available in the next minor "
-                                  "release of pychattr.")
+        df_ = pd.DataFrame(columns=["channel"])
+
+        has_rev = True if rev_f in df.columns else False
+        has_cost = True if cost_f in df.columns else False
+
+        df_.loc[:, "channel"] = df.loc[:, path_f].str.replace(
+            ">>>{}".format(direct_channel),
+            "",
+            regex=False
+        )\
+            .apply(
+            lambda s: s.split(sep)[-1]
+        )
+
+        # if there are multiple models specified, so we need to include
+        # the direct stage with these model results with a value of 0
+        if len(heuristics) > 1:
+            df_.loc[:, "last_touch_non_direct_conversions"] = \
+                df.loc[:, conv_f].copy()
+    
+            if has_rev:
+                df_.loc[:, "last_touch_non_direct_revenue"] = \
+                    df.loc[:, rev_f].copy()
+            if has_cost:
+                df_.loc[:, "last_touch_non_direct_cost"] = \
+                    df.loc[:, cost_f].copy()
+        # this is the only model that will be fitted so we can just
+        # exclude it from the final results of fitting this model
+        else:
+            df_.loc[:, "last_touch_non_direct_conversions"] = \
+                df.loc[:, conv_f].copy()
+
+            # add the direct stage with 0
+            df_.loc[df.shape[0], "last_touch_non_direct_conversions"]\
+                = 0
+
+            if has_rev:
+                df_.loc[:, "last_touch_non_direct_revenue"] = \
+                    df.loc[:, rev_f].copy()
+                df_.loc[df.shape[0], "last_touch_non_direct_revenue"]\
+                    = 0
+            if has_cost:
+                df_.loc[:, "last_touch_non_direct_cost"] = \
+                    df.loc[:, cost_f].copy()
+                df_.loc[df.shape[0], "last_touch_non_direct_cost"] = 0
+
+        return df_
 
     def u_shaped(df, path_f, conv_f, sep, rev_f=None, cost_f=None):
         """U-shaped attribution model."""
@@ -191,14 +235,14 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
 
         return df_.groupby(["channel"], as_index=False).agg(aggs)
 
-    def w_shaped(df, path_f, conv_f, sep, lead_stage, rev_f=None,
+    def w_shaped(df, path_f, conv_f, sep, lead_channel, rev_f=None,
                  cost_f=None):
         """W-shaped attribution model."""
         raise NotImplementedError("This model specification will be "
                                   "available in the next minor "
                                   "release of pychattr.")
 
-    def z_shaped(df, path_f, conv_f, sep, oppty_stage, rev_f=None,
+    def z_shaped(df, path_f, conv_f, sep, oppty_channel, rev_f=None,
                  cost_f=None):
         """Z-shaped (full path) attribution model."""
         raise NotImplementedError("This model specification will be "
@@ -206,11 +250,11 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
                                   "release of pychattr.")
 
     def time_decay(df, path_f, conv_f, sep, path_dates, conv_dates,
-                   lead_stage=None, oppty_stage=None, half_life=7,
+                   lead_channel=None, oppty_channel=None, half_life=7,
                    rev_f=None):
         """Time decay attribution model."""
-        # has_lead = True if lead_stage else False
-        # has_oppty = True if oppty_stage else False
+        # has_lead = True if lead_channel else False
+        # has_oppty = True if oppty_channel else False
         raise NotImplementedError("This model specification will be "
                                   "available in the next minor "
                                   "release of pychattr.")
@@ -225,25 +269,25 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
     # the first four models need extra parameters sent to them
     if heuristic == "last_touch_non_direct":
         f = functools.partial(eval(heuristic), df, paths, conversions,
-                              sep, direct_stage, rev_f=revenues,
+                              sep, direct_channel, rev_f=revenues,
                               cost_f=costs)
 
     elif heuristic == "time_decay":
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, path_dates, conv_dates,
-                              lead_stage=lead_stage,
-                              oppty_stage=oppty_stage,
+                              lead_channel=lead_channel,
+                              oppty_channel=oppty_channel,
                               half_life=half_life, rev_f=revenues,
                               cost_f=costs)
 
     elif heuristic == "w_shaped":
         f = functools.partial(eval(heuristic), df, paths, conversions,
-                              sep, lead_stage, rev_f=revenues,
+                              sep, lead_channel, rev_f=revenues,
                               cost_f=costs)
 
     elif heuristic == "z_shaped":
         f = functools.partial(eval(heuristic), df, paths, conversions,
-                              sep, oppty_stage, rev_f=revenues,
+                              sep, oppty_channel, rev_f=revenues,
                               cost_f=costs)
 
     else:

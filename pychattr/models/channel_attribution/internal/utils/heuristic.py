@@ -3,12 +3,13 @@ heuristic.py: Various utility functions used during construction of
 the heuristic models.
 """
 import pandas as pd
+
 from ..logic.heuristic import fit_model
 
 
 def fit_heuristic_models(heuristics, df, paths, conversions, sep,
-                         revenues=None, costs=None, lead_stage=None,
-                         oppty_stage=None, direct_stage=None,
+                         revenues=None, costs=None, lead_channel=None,
+                         oppty_channel=None, direct_channel=None,
                          half_life=7, path_dates=None, conv_dates=None):
     """
     Fits the specified heuristic models.
@@ -20,18 +21,18 @@ def fit_heuristic_models(heuristics, df, paths, conversions, sep,
             #  application function (fit_model)
             model = fit_model(df, heuristic, paths, conversions, sep,
                               revenues=revenues, costs=costs,
-                              lead_stage=lead_stage,
-                              oppty_stage=oppty_stage,
-                              direct_stage=direct_stage,
+                              lead_channel=lead_channel,
+                              oppty_channel=oppty_channel,
+                              direct_channel=direct_channel,
                               half_life=half_life,
                               path_dates=path_dates,
                               conv_dates=conv_dates)
 
         model = fit_model(df, heuristic, paths, conversions, sep,
                           revenues=revenues, costs=costs,
-                          lead_stage=lead_stage,
-                          oppty_stage=oppty_stage,
-                          direct_stage=direct_stage,
+                          lead_channel=lead_channel,
+                          oppty_channel=oppty_channel,
+                          direct_channel=direct_channel,
                           half_life=half_life, path_dates=path_dates,
                           conv_dates=conv_dates, )
 
