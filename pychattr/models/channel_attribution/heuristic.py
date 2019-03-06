@@ -54,24 +54,26 @@ class HeuristicModel(HeuristicModelMixin):
 
     u_shaped: boolean; default=False.
       Whether to calculate the u-shaped heuristic model, also known as
-      the position-based model. This model is typically used when the
-      conversion event represents lead-creation.
+      the position-based model. This model is typically used to gauge
+      the effectiveness of lead-creation.
 
     w_shaped: boolean; default=False.
       Whether to calculate the w-shaped heuristic model. This model is
-      typically used when the paths contain the lead-creation and
-      opportunity-creation stages.
+      typically used to gauge the effectiveness of opportunity-creation.
 
-      NOTE: When using this model the `lead_channel` parameter must be
-      set to ensure the weights are applied correctly.
+      NOTE: When using this model the `lead_channel` parameter must
+      be set to ensure the weights are applied correctly to the lead
+      channel.
 
     z_shaped: boolean; default=False.
       Whether to calculate the z-shaped heuristic model, also known as
       the full-path model. This model is typically used to measure the
       full path from first-touch to the customer-close stage.
 
-      NOTE: When using this model the `opportunity_stage` parameter
-      must be set to ensure the weights are applied correctly.
+      NOTE: When using this model the `lead_channel` and
+      `opportunity_channel` parameters must be set to ensure the
+      weights are applied correctly to the lead and opportunity
+      channels.
 
     time_decay: boolean; default=False.
       Whether to calculate the time-decay heuristic model. This model
@@ -95,22 +97,24 @@ class HeuristicModel(HeuristicModelMixin):
       process. If `True`, then `direct_channel` must be specified.
 
     direct_channel: string; default=None; required if
-      `last_touch_non_direct=True`.
+    `exclude_direct=True`.
       The name of the direct channel within the paths of the dataset.
 
-    lead_channel: string; default=None; required if `w_shaped=True`.
+    lead_channel: string; default=None; required if `w_shaped=True`
+    or `z_shaped=True`.
       The name of the channel representing lead-creation within the
       paths of the dataset.
 
     opportunity_channel: string; default=None; required if
       `z_shaped=True`.
-      The name of the channel representing opportunity-creation within
-      the paths of the dataset.
+      The name of the channel representing the touch point directly
+      before opportunity-creation within the paths of the dataset.
 
-    half_life: int; default=7; ignored if `time_decay=False`.
+    time_decay_days: int; default=7; ignored if `time_decay=False`.
       The number of days to use in calculating the weights for each
-      channel. The smaller the number, the smaller the amount of
-      credit that earlier channels in the path will receive.
+      channel in the time decay model. The smaller the number,
+      the smaller the amount of credit that earlier channels in the
+      path will receive.
 
     path_dates_feature: string; default=None; required if
      `time_decay=True`.
@@ -157,7 +161,7 @@ class HeuristicModel(HeuristicModelMixin):
                  z_shaped=False, time_decay=False,
                  ensemble_results=True, exclude_direct=False,
                  direct_channel=None, lead_channel=None,
-                 opportunity_channel=None, half_life=7,
+                 opportunity_channel=None, time_decay_days=7,
                  path_dates_feature=None,
                  conversion_dates_feature=None):
         super().__init__(path_feature, conversion_feature,
@@ -169,13 +173,13 @@ class HeuristicModel(HeuristicModelMixin):
         self.u = u_shaped
         self.w = w_shaped
         self.z = z_shaped
-        self.time = time_decay
+        self.decay = time_decay
         self.ensemble = ensemble_results
         self.direct = exclude_direct
         self.direct_channel = direct_channel
         self.lead_channel = lead_channel
         self.oppty_channel = opportunity_channel
-        self.half_life = half_life
+        self.decay_rate = time_decay_days
         self.path_dates = path_dates_feature
         self.conv_dates = conversion_dates_feature
 
@@ -201,7 +205,7 @@ class HeuristicModel(HeuristicModelMixin):
             direct_channel=self.direct_channel,
             lead_channel=self.lead_channel,
             oppty_channel=self.oppty_channel,
-            half_life=self.half_life,
+            decay_rate=self.decay_rate,
             path_dates=self.path_dates,
             conv_dates=self.conv_dates
         )

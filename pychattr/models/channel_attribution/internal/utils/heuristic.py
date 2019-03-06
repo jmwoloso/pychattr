@@ -11,7 +11,8 @@ def fit_heuristic_models(heuristics, df, paths, conversions, sep,
                          revenues=None, costs=None,
                          exclude_direct=False, direct_channel=None,
                          lead_channel=None, oppty_channel=None,
-                         half_life=7, path_dates=None, conv_dates=None):
+                         decay_rate=7, path_dates=None,
+                         conv_dates=None):
     """
     Fits the specified heuristic models.
     """
@@ -26,7 +27,7 @@ def fit_heuristic_models(heuristics, df, paths, conversions, sep,
                               direct_channel=direct_channel,
                               lead_channel=lead_channel,
                               oppty_channel=oppty_channel,
-                              half_life=half_life,
+                              decay_rate=decay_rate,
                               path_dates=path_dates,
                               conv_dates=conv_dates)
 
@@ -36,8 +37,8 @@ def fit_heuristic_models(heuristics, df, paths, conversions, sep,
                           direct_channel=direct_channel,
                           lead_channel=lead_channel,
                           oppty_channel=oppty_channel,
-                          half_life=half_life, path_dates=path_dates,
-                          conv_dates=conv_dates, )
+                          decay_rate=decay_rate, path_dates=path_dates,
+                          conv_dates=conv_dates)
 
         # the results of the current model to the results dict
         results.append(model)

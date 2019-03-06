@@ -69,14 +69,14 @@ class HeuristicModelMixin(ChannelAttributionMixin):
             heuristics.append("last_touch")
         if self.linear:
             heuristics.append("linear_touch")
-        if self.time:
-            heuristics.append("time_decay")
         if self.u:
             heuristics.append("u_shaped")
         if self.w:
             heuristics.append("w_shaped")
         if self.z:
             heuristics.append("z_shaped")
+        if self.decay:
+            heuristics.append("time_decay")
         if self.ensemble:
             heuristics.append("ensemble_model")
         self._heuristics = heuristics

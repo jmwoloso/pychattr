@@ -1,11 +1,12 @@
 import functools
 
+import numpy as np
 import pandas as pd
 
 
 def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
               costs=None, exclude_direct=False, direct_channel=None,
-              lead_channel=None, oppty_channel=None, half_life=7,
+              lead_channel=None, oppty_channel=None, decay_rate=7,
               path_dates=None, conv_dates=None):
     """Generates the specified heuristic model using partial
     application."""
@@ -87,16 +88,16 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
             aggs["linear_touch_cost"] = "sum"
 
         if exclude_direct:
-            paths = df.loc[:, path_f].str.replace(
+            p = df.loc[:, path_f].str.replace(
                 sep + "{}".format(direct_channel),
                 "",
                 regex=False
             ).values
         else:
-            paths = df.loc[:, path_f].values
+            p = df.loc[:, path_f].values
 
         # iterate through the paths and calculate the linear touch model
-        for i in range(len(paths)):
+        for i in range(len(p)):
             # split the current path into individual channels
             channels = pd.Series(paths[i]).apply(
                 lambda s: s.split(sep)
@@ -148,18 +149,18 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
             aggs["u_shaped_cost"] = "sum"
 
         if exclude_direct:
-            paths = df.loc[:, path_f].str.replace(
+            p = df.loc[:, path_f].str.replace(
                 sep + "{}".format(direct_channel),
                 "",
                 regex=False
             ).values
         else:
-            paths = df.loc[:, path_f].values
+            p = df.loc[:, path_f].values
 
-        # iterate through the paths and calculate the linear touch model
-        for i in range(len(paths)):
+        # iterate through the paths and calculate the u-shaped model
+        for i in range(len(p)):
             # split the current path into individual channels
-            channels = pd.Series(paths[i]).apply(
+            channels = pd.Series(p[i]).apply(
                 lambda s: s.split(sep)
             )
 
@@ -177,8 +178,7 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
             # remove it from the list
             idx.pop(-1)
 
-            weight1 = 0.2 / len(idx)
-            weight2 = 0.4
+            weight = 0.2 / len(idx)
 
             # dataframe to hold the values for each channel for this
             # iteration
@@ -191,25 +191,23 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
                 df.loc[i, conv_f].copy()
             # now apply the correct weights; first and last get 40%
             d_.loc[[first_idx, last_idx], "u_shaped_conversions"] *= \
-                weight2
+                0.4
             # the remaining channels split 20%
-            d_.loc[idx, "u_shaped_conversions"] *= weight1
+            d_.loc[idx, "u_shaped_conversions"] *= weight
 
             if has_rev:
                 d_.loc[:, "u_shaped_revenue"] = \
                     df.loc[i, rev_f].copy()
                 d_.loc[[first_idx, last_idx], "u_shaped_revenue"] *= \
-                    weight2
-                d_.loc[idx, "u_shaped_revenue"] *= weight1
+                    0.4
+                d_.loc[idx, "u_shaped_revenue"] *= weight
 
             if has_cost:
                 d_.loc[:, "u_shaped_cost"] = \
                     df.loc[i, cost_f].copy()
                 d_.loc[[first_idx, last_idx], "u_shaped_cost"] *= \
-                    weight2
-                d_.loc[idx, "u_shaped_cost"] *= weight1
-
-            # "fix" the first and last channel to meet their 40% share
+                    0.4
+                d_.loc[idx, "u_shaped_cost"] *= weight
 
             results.append(d_)
 
@@ -219,24 +217,206 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
         return df_.groupby(["channel"], as_index=False).agg(aggs)
 
     def w_shaped(df, path_f, conv_f, sep, lead_channel, rev_f=None,
-                 cost_f=None, exclude_direct=False,
-                 direct_channel=None):
+                 cost_f=None,exclude_direct=False, direct_channel=None):
         """W-shaped attribution model."""
-        raise NotImplementedError("This model specification will be "
-                                  "available in the next minor "
-                                  "release of pychattr.")
+        # container to hold the resulting dataframes
+        results = []
 
-    def z_shaped(df, path_f, conv_f, sep, oppty_channel, rev_f=None,
-                 cost_f=None, exclude_direct=False,
+        # aggregations to perform prior to sending results back
+        aggs = {
+            "w_shaped_conversions": "sum"
+        }
+
+        has_rev = True if rev_f in df.columns else False
+        has_cost = True if cost_f in df.columns else False
+
+        if has_rev:
+            aggs["w_shaped_revenue"] = "sum"
+
+        if has_cost:
+            aggs["w_shaped_cost"] = "sum"
+
+        if exclude_direct:
+            p = df.loc[:, path_f].str.replace(
+                sep + "{}".format(direct_channel),
+                "",
+                regex=False
+            ).values
+        else:
+            p = df.loc[:, path_f].values
+
+        # iterate through the paths and calculate the u-shaped model
+        for i in range(len(p)):
+            # split the current path into individual channels
+            channels = pd.Series(p[i]).apply(
+                lambda s: np.array(s.split(sep))
+            ).values[0]
+
+            # cutoff the path after the oppty channel
+            channels = channels[:np.argmax(
+                channels == oppty_channel) + 1]
+
+            # get the index where there lead channel resides
+            lead_idx = np.argmax(channels == lead_channel)
+
+            # get the indices of the channels to apply weights
+            # appropriately
+            idx = list(range(len(channels)))
+
+            # remove the lead channel index
+            idx.pop(lead_idx)
+
+            # capture the first index
+            first_idx = idx[0]
+            # remove it from the list
+            idx.pop(0)
+
+            # capture the last index
+            last_idx = idx[-1]
+            # remove it from the list
+            idx.pop(-1)
+
+            weight = 0.1 / len(idx)
+
+            # dataframe to hold the values for each channel for this
+            # iteration
+            d_ = pd.DataFrame({
+                "channel": channels
+            })
+
+            # transfer over the values first
+            d_.loc[:, "u_shaped_conversions"] = \
+                df.loc[i, conv_f].copy()
+            # now apply the correct weights; first and last get 40%
+            d_.loc[[first_idx, lead_idx, last_idx],
+                   "u_shaped_conversions"] *= 0.3
+            # the remaining channels split 20%
+            d_.loc[idx, "u_shaped_conversions"] *= weight
+
+            if has_rev:
+                d_.loc[:, "u_shaped_revenue"] = \
+                    df.loc[i, rev_f].copy()
+                d_.loc[[first_idx, lead_idx, last_idx],
+                       "u_shaped_revenue"] *= 0.3
+                d_.loc[idx, "u_shaped_revenue"] *= weight
+
+            if has_cost:
+                d_.loc[:, "u_shaped_cost"] = \
+                    df.loc[i, cost_f].copy()
+                d_.loc[[first_idx, lead_idx, last_idx],
+                       "u_shaped_cost"] *= 0.3
+                d_.loc[idx, "u_shaped_cost"] *= weight
+
+            results.append(d_)
+
+        # combine the results
+        df_ = pd.concat(results, axis=0)
+
+        return df_.groupby(["channel"], as_index=False).agg(aggs)
+
+    def z_shaped(df, path_f, conv_f, sep, lead_channel, oppty_channel,
+                 rev_f=None, cost_f=None, exclude_direct=False,
                  direct_channel=None):
         """Z-shaped (full path) attribution model."""
-        raise NotImplementedError("This model specification will be "
-                                  "available in the next minor "
-                                  "release of pychattr.")
+        # container to hold the resulting dataframes
+        results = []
+
+        # aggregations to perform prior to sending results back
+        aggs = {
+            "w_shaped_conversions": "sum"
+        }
+
+        has_rev = True if rev_f in df.columns else False
+        has_cost = True if cost_f in df.columns else False
+
+        if has_rev:
+            aggs["w_shaped_revenue"] = "sum"
+
+        if has_cost:
+            aggs["w_shaped_cost"] = "sum"
+
+        if exclude_direct:
+            p = df.loc[:, path_f].str.replace(
+                sep + "{}".format(direct_channel),
+                "",
+                regex=False
+            ).values
+        else:
+            p = df.loc[:, path_f].values
+
+        # iterate through the paths and calculate the u-shaped model
+        for i in range(len(p)):
+            # split the current path into individual channels
+            channels = pd.Series(p[i]).apply(
+                lambda s: np.array(s.split(sep))
+            ).values[0]
+
+            # cutoff the path after the oppty channel
+            channels = channels[:np.argmax(
+                channels == oppty_channel) + 1]
+
+            # get the index where there lead channel resides
+            lead_idx = np.argmax(channels == lead_channel)
+            oppty_idx = np.argmax(channels == oppty_channel)
+
+            # get the indices of the channels to apply weights
+            # appropriately
+            idx = list(range(len(channels)))
+
+            # remove the lead channel index
+            idx.pop(lead_idx)
+            idx.pop(oppty_idx)
+
+            # capture the first index
+            first_idx = idx[0]
+            # remove it from the list
+            idx.pop(0)
+
+            # capture the last index
+            last_idx = idx[-1]
+            # remove it from the list
+            idx.pop(-1)
+
+            weight = 0.1 / len(idx)
+
+            # dataframe to hold the values for each channel for this
+            # iteration
+            d_ = pd.DataFrame({
+                "channel": channels
+            })
+
+            # transfer over the values first
+            d_.loc[:, "u_shaped_conversions"] = \
+                df.loc[i, conv_f].copy()
+            # now apply the correct weights
+            d_.loc[[first_idx, lead_idx, oppty_idx, last_idx],
+                   "u_shaped_conversions"] *= 0.225
+            # the remaining channels split 20%
+            d_.loc[idx, "u_shaped_conversions"] *= weight
+
+            if has_rev:
+                d_.loc[:, "u_shaped_revenue"] = \
+                    df.loc[i, rev_f].copy()
+                d_.loc[[first_idx, lead_idx, oppty_idx, last_idx],
+                       "u_shaped_revenue"] *= 0.225
+                d_.loc[idx, "u_shaped_revenue"] *= weight
+
+            if has_cost:
+                d_.loc[:, "u_shaped_cost"] = \
+                    df.loc[i, cost_f].copy()
+                d_.loc[[first_idx, lead_idx, oppty_idx, last_idx],
+                       "u_shaped_cost"] *= 0.225
+                d_.loc[idx, "u_shaped_cost"] *= weight
+
+            results.append(d_)
+
+        # combine the results
+        df_ = pd.concat(results, axis=0)
+
+        return df_.groupby(["channel"], as_index=False).agg(aggs)
 
     def time_decay(df, path_f, conv_f, sep, path_dates, conv_dates,
-                   lead_channel=None, oppty_channel=None, half_life=7,
-                   rev_f=None, exclude_direct=False,
+                   decay_rate=7, rev_f=None, exclude_direct=False,
                    direct_channel=None):
         """Time decay attribution model."""
         # has_lead = True if lead_channel else False
@@ -252,18 +432,8 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
                                   "release of pychattr.")
 
     # TODO: is there a cleaner way to do this?
-    # the first three models need extra parameters sent to them
-    if heuristic == "time_decay":
-        f = functools.partial(eval(heuristic), df, paths, conversions,
-                              sep, path_dates, conv_dates,
-                              lead_channel=lead_channel,
-                              oppty_channel=oppty_channel,
-                              half_life=half_life, rev_f=revenues,
-                              cost_f=costs,
-                              exclude_direct=exclude_direct,
-                              direct_channel=direct_channel)
-
-    elif heuristic == "w_shaped":
+    # the explicitly-named models need extra parameters sent to them
+    if heuristic == "w_shaped":
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, lead_channel, rev_f=revenues,
                               cost_f=costs,
@@ -272,7 +442,15 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
 
     elif heuristic == "z_shaped":
         f = functools.partial(eval(heuristic), df, paths, conversions,
-                              sep, oppty_channel, rev_f=revenues,
+                              sep, lead_channel, oppty_channel,
+                              rev_f=revenues, cost_f=costs,
+                              exclude_direct=exclude_direct,
+                              direct_channel=direct_channel)
+
+    elif heuristic == "time_decay":
+        f = functools.partial(eval(heuristic), df, paths, conversions,
+                              sep, path_dates, conv_dates,
+                              decay_rate=decay_rate, rev_f=revenues,
                               cost_f=costs,
                               exclude_direct=exclude_direct,
                               direct_channel=direct_channel)
