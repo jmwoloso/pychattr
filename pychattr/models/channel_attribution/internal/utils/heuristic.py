@@ -16,32 +16,25 @@ def fit_heuristic_models(heuristics, df, paths, conversions, sep,
     """
     Fits the specified heuristic models.
     """
-    results = []
+    results_ = []
     for heuristic in heuristics:
-        if heuristic == "ensemble_model":
-            # TODO: might want to break this out of the partial
-            #  application function (fit_model)
+        if heuristic != "ensemble_model":
             model = fit_model(df, heuristic, paths, conversions, sep,
                               revenues=revenues, costs=costs,
                               exclude_direct=exclude_direct,
                               direct_channel=direct_channel,
                               lead_channel=lead_channel,
                               oppty_channel=oppty_channel,
-                              decay_rate=decay_rate,
-                              path_dates=path_dates,
+                              decay_rate=decay_rate, path_dates=path_dates,
                               conv_dates=conv_dates)
 
-        model = fit_model(df, heuristic, paths, conversions, sep,
-                          revenues=revenues, costs=costs,
-                          exclude_direct=exclude_direct,
-                          direct_channel=direct_channel,
-                          lead_channel=lead_channel,
-                          oppty_channel=oppty_channel,
-                          decay_rate=decay_rate, path_dates=path_dates,
-                          conv_dates=conv_dates)
-
-        # the results of the current model to the results dict
-        results.append(model)
-
-    # combine the results and return
-    return pd.concat(results)
+            # the results of the current model to the results dict
+            results_.append(model)
+            # combine the results and return
+            return pd.concat(results_, axis=1)
+        # not implemented yet
+        else:
+            raise NotImplementedError(
+                "This model specification will be "
+                "available in the next minor "
+                "release of pychattr.")

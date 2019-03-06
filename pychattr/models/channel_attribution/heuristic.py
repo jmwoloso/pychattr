@@ -92,6 +92,8 @@ class HeuristicModel(HeuristicModelMixin):
     ensemble_results: boolean; default=True.
       Whether to create an ensemble of the resulting models.
 
+      NOTE: Will be implemented in the next minor release.
+
     exclude_direct: boolean; default=False; optional.
       Whether to exclude the direct channel during the model fitting
       process. If `True`, then `direct_channel` must be specified.
@@ -114,7 +116,9 @@ class HeuristicModel(HeuristicModelMixin):
       The number of days to use in calculating the weights for each
       channel in the time decay model. The smaller the number,
       the smaller the amount of credit that earlier channels in the
-      path will receive.
+      path will receive. For example, with the default value of 7
+      days, an interaction that occurred 7 days prior to the
+      conversion would receive 50% of the credit for the conversion.
 
     path_dates_feature: string; default=None; required if
      `time_decay=True`.
@@ -127,10 +131,10 @@ class HeuristicModel(HeuristicModelMixin):
         like: "2019-01-01>>>2019-02-01>>>2019-03-01" where the separator
         is the same as that used to construct the paths.
 
-    conversion_dates_feature: string; default=None; required if
+    conversion_date_feature: string; default=None; required if
       `time_decay=True`.
-      The name of the feature representing the dates of the
-      conversion event within the paths.
+      The name of the feature representing the date of the events found
+      in `conversion_feature`.
 
     Attributes
     ----------
@@ -153,6 +157,7 @@ class HeuristicModel(HeuristicModelMixin):
     https://www.bizible.com/blog/multi-touch-attribution-full-debrief
     https://www.bizible.com/blog/marketing-attribution-models-complete-list
     https://support.google.com/analytics/answer/1662518?hl=en
+    https://www.optimizesmart.com/understanding-conversion-credit-distribution-attribution-models-google-analytics/
     """
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
@@ -163,7 +168,7 @@ class HeuristicModel(HeuristicModelMixin):
                  direct_channel=None, lead_channel=None,
                  opportunity_channel=None, time_decay_days=7,
                  path_dates_feature=None,
-                 conversion_dates_feature=None):
+                 conversion_date_feature=None):
         super().__init__(path_feature, conversion_feature,
                          revenue_feature, cost_feature, separator)
 
@@ -181,7 +186,7 @@ class HeuristicModel(HeuristicModelMixin):
         self.oppty_channel = opportunity_channel
         self.decay_rate = time_decay_days
         self.path_dates = path_dates_feature
-        self.conv_dates = conversion_dates_feature
+        self.conv_dates = conversion_date_feature
 
     def fit(self, df):
         # derive internal attributes that will be used during model

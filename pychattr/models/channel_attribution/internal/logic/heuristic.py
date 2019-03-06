@@ -4,6 +4,12 @@ import numpy as np
 import pandas as pd
 
 
+def ensemble_results(paths, conversions, revenues, costs, separator):
+    """Blended version of all the selected heuristic models."""
+    raise NotImplementedError("This model specification will be "
+                              "available in the next minor "
+                              "release of pychattr.")
+
 def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
               costs=None, exclude_direct=False, direct_channel=None,
               lead_channel=None, oppty_channel=None, decay_rate=7,
@@ -416,20 +422,111 @@ def fit_model(df, heuristic, paths, conversions, sep, revenues=None,
         return df_.groupby(["channel"], as_index=False).agg(aggs)
 
     def time_decay(df, path_f, conv_f, sep, path_dates, conv_dates,
-                   decay_rate=7, rev_f=None, exclude_direct=False,
-                   direct_channel=None):
+                   decay_rate=7, rev_f=None, cost_f=None,
+                   exclude_direct=False, direct_channel=None):
         """Time decay attribution model."""
-        # has_lead = True if lead_channel else False
-        # has_oppty = True if oppty_channel else False
-        raise NotImplementedError("This model specification will be "
-                                  "available in the next minor "
-                                  "release of pychattr.")
+        def get_weight(days_to_conversion, decay_rate):
+            """Takes the days-to-conversion and calculates the
+            attribution weight using the decay rate supplied."""
+            return np.exp2(-days_to_conversion / decay_rate)
 
-    def ensemble_model(paths, conversions, revenues, costs, separator):
-        """Blended version of all the selected heuristic models."""
-        raise NotImplementedError("This model specification will be "
-                                  "available in the next minor "
-                                  "release of pychattr.")
+        # container to hold the resulting dataframes
+        results = []
+
+        # aggregations to perform prior to sending results back
+        aggs = {
+            "time_decay_conversions": "sum"
+        }
+
+        has_rev = True if rev_f in df.columns else False
+        has_cost = True if cost_f in df.columns else False
+
+        if has_rev:
+            aggs["time_decay_revenue"] = "sum"
+
+        if has_cost:
+            aggs["time_decay_cost"] = "sum"
+
+        p = df.loc[:, path_f].values
+
+        # iterate through the paths and calculate the u-shaped model
+        for i in range(len(p)):
+            # split the current path into individual channels
+            channels = pd.Series(p[i]).apply(
+                lambda s: np.array(s.split(sep))
+            ).values[0]
+
+            # split the current path dates into individual dates
+            path_dates = df.loc[i, path_dates].apply(
+                lambda s: np.array(s.split(sep))
+            ).values[0]
+
+            # get the conversion date
+            conv_date = df.loc[i, conv_dates].values[0]
+
+            # get the conversion
+            conv = df.loc[i, conv_f].values[0]
+
+            # get the revenue for this particular path
+            if has_rev:
+                rev = df.loc[i, rev_f].values[0]
+            if has_cost:
+                cost = df.loc[i, cost_f].values[0]
+
+            if exclude_direct:
+                # get the index of the direct channel
+                direct_idx = np.argmax(channels == direct_channel)
+                # remove the direct channel
+                c_ = list(channels).pop(direct_idx)
+                channels = np.array(c_)
+                # remove the corresponding date
+                pd_ = list(path_dates).pop(direct_idx)
+                path_dates = np.array(pd_)
+            else:
+                pass
+            # dataframe to hold the values for each channel for this
+            # iteration
+            d_ = pd.DataFrame({
+                "channel": channels,
+                "path_date": path_dates,
+                "conv_date": [conv_date] * len(path_dates),
+                "decay_rate": [decay_rate] * len(path_dates),
+            })
+
+            # calculate the days to conversion
+            d_.loc[:, "dtc"] = (
+                d_.loc[:, "conv_date"].astype("datetime64[ns]") -\
+                d_.loc[:, "path_date"].astype("datetime64[ns]")
+            ) / np.timedelta64(1, "D")
+
+            d_ = d_.drop(columns=["conv_date", "path_date"])
+
+            # calculate the conversions based on the decay rate for
+            # each channel
+            d_.loc[:, "time_decay_conversions"] = \
+                np.vectorize(get_weight)(d_.loc[:, "dtc"],
+                                         d_.loc[:, "decay_rate"])*conv
+
+            if has_rev:
+                # calculate the conversions based on the decay rate for
+                # each channel
+                d_.loc[:, "time_decay_revenue"] = \
+                    (np.vectorize(get_weight)
+                     (d_.loc[:, "dtc"], d_.loc[:, "decay_rate"])) * rev
+
+            if has_cost:
+                # calculate the conversions based on the decay rate for
+                # each channel
+                d_.loc[:, "time_decay_cost"] = \
+                    (np.vectorize(get_weight)
+                     (d_.loc[:, "dtc"], d_.loc[:, "decay_rate"]))*cost
+
+            results.append(d_)
+
+        # combine the results
+        df_ = pd.concat(results, axis=0)
+
+        return df_.groupby(["channel"], as_index=False).agg(aggs)
 
     # TODO: is there a cleaner way to do this?
     # the explicitly-named models need extra parameters sent to them
