@@ -6,7 +6,6 @@ see: https://www.bizible.com/blog/multi-touch-attribution-full-debrief
 """
 
 from .internal.utils import HeuristicModelMixin
-
 from .internal.utils.heuristic import fit_heuristic_models
 
 
@@ -131,7 +130,7 @@ class HeuristicModel(HeuristicModelMixin):
         like: "2019-01-01>>>2019-02-01>>>2019-03-01" where the separator
         is the same as that used to construct the paths.
 
-    conversion_date_feature: string; default=None; required if
+    conversion_dates_feature: string; default=None; required if
       `time_decay=True`.
       The name of the feature representing the date of the events found
       in `conversion_feature`.
@@ -161,32 +160,33 @@ class HeuristicModel(HeuristicModelMixin):
     """
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
-                 separator=">>>", first_touch=True, last_touch=True,
+                 path_dates_feature=None, conversion_dates_feature=None,
+                 direct_channel=None, exclude_direct=False,
+                 separator=">>>", return_summary=False,
+                 lead_channel=None, opportunity_channel=None,
+                 first_touch=True, last_touch=True,
                  linear_touch=True, u_shaped=False, w_shaped=False,
                  z_shaped=False, time_decay=False,
-                 ensemble_results=True, exclude_direct=False,
-                 direct_channel=None, lead_channel=None,
-                 opportunity_channel=None, time_decay_days=7,
-                 path_dates_feature=None,
-                 conversion_date_feature=None):
-        super().__init__(path_feature, conversion_feature,
-                         revenue_feature, cost_feature, separator)
+                 ensemble_results=True,  time_decay_days=7):
 
-        self.first = first_touch
-        self.last = last_touch
-        self.linear = linear_touch
-        self.u = u_shaped
-        self.w = w_shaped
-        self.z = z_shaped
-        self.decay = time_decay
-        self.ensemble = ensemble_results
-        self.direct = exclude_direct
-        self.direct_channel = direct_channel
-        self.lead_channel = lead_channel
-        self.oppty_channel = opportunity_channel
-        self.decay_rate = time_decay_days
-        self.path_dates = path_dates_feature
-        self.conv_dates = conversion_date_feature
+        super().__init__(path_feature, conversion_feature,
+                         revenue_feature=revenue_feature,
+                         cost_feature=cost_feature,
+                         path_dates_feature=path_dates_feature,
+                         conversion_dates_feature=conversion_dates_feature,
+                         direct_channel=direct_channel,
+                         exclude_direct=exclude_direct,
+                         separator=separator,
+                         return_summary=return_summary,
+                         lead_channel=lead_channel,
+                         opportunity_channel=opportunity_channel,
+                         first_touch=first_touch,
+                         last_touch=last_touch,
+                         linear_touch=linear_touch, u_shaped=u_shaped,
+                         w_shaped=w_shaped, z_shaped=z_shaped,
+                         time_decay=time_decay,
+                         ensemble_results=ensemble_results,
+                         time_decay_days=time_decay_days)
 
     def fit(self, df):
         # derive internal attributes that will be used during model
@@ -195,21 +195,21 @@ class HeuristicModel(HeuristicModelMixin):
 
         # attempt to convert the values to the types required for
         # modeling
-        #TODO: param/input validation
+        # TODO: param/input validation
 
         # fit the specified heuristic models
         self.results_ = fit_heuristic_models(
             self._heuristics,
-            self.df_,
+            self._df,
             self.paths,
             self.conversions,
             self.sep,
             revenues=self.revenues,
             costs=self.costs,
-            exclude_direct=self.direct,
-            direct_channel=self.direct_channel,
-            lead_channel=self.lead_channel,
-            oppty_channel=self.oppty_channel,
+            exclude_direct=self.exclude_direct,
+            direct_channel=self.direct,
+            lead_channel=self.lead,
+            oppty_channel=self.oppty,
             decay_rate=self.decay_rate,
             path_dates=self.path_dates,
             conv_dates=self.conv_dates
