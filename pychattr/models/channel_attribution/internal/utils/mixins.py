@@ -1,12 +1,13 @@
 """
-mixins.py: Mixin classes containing common functionality for the
-various model specifications.
+Mixin classes containing common functionality for the various model
+specifications.
 """
+# Author: Jason Wolosonovich <jason@avaland.io>
+# License: BSD 3-clause
+
 import abc
-import collections
 
 import numpy as np
-import pandas as pd
 
 
 class PyChAttrBase(metaclass=abc.ABCMeta):

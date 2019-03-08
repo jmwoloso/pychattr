@@ -2,6 +2,9 @@
 heuristic.py: Various utility functions used during construction of
 the heuristic models.
 """
+# Author: Jason Wolosonovich <jason@avaland.io>
+# License: BSD 3-clause
+
 import pandas as pd
 
 from ..logic.heuristic import fit_heuristics
@@ -16,7 +19,6 @@ def ensemble_results(paths, conversions, revenues, costs, separator):
 
 def fit_heuristic_models(heuristics, df, paths, conversions, sep,
                          revenues=None, costs=None,
-                         exclude_direct=False, direct_channel=None,
                          lead_channel=None, oppty_channel=None,
                          decay_rate=7, path_dates=None,
                          conv_dates=None):
@@ -28,8 +30,6 @@ def fit_heuristic_models(heuristics, df, paths, conversions, sep,
         if heuristic != "ensemble_model":
             model = fit_heuristics(df, heuristic, paths, conversions,
                                    sep, revenues=revenues, costs=costs,
-                                   exclude_direct=exclude_direct,
-                                   direct_channel=direct_channel,
                                    lead_channel=lead_channel,
                                    oppty_channel=oppty_channel,
                                    decay_rate=decay_rate,
@@ -37,7 +37,7 @@ def fit_heuristic_models(heuristics, df, paths, conversions, sep,
                                    conv_dates=conv_dates)
 
             # the results of the current model to the results dict
-            results_.append(model)
+            results_.append(model())
             # combine the results and return
             return pd.concat(results_, axis=1)
         # not implemented yet

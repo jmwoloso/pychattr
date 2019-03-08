@@ -1,9 +1,8 @@
+"""Contains the class wrapper for the heuristic models used in
+channel attribution.
 """
-heuristic.py: contains the class wrapper for the heuristic models 
-used in channel attribution.
-
-see: https://www.bizible.com/blog/multi-touch-attribution-full-debrief
-"""
+# Author: Jason Wolosonovich <jason@avaland.io>
+# License: BSD 3-clause
 
 from .internal.utils import HeuristicModelMixin
 from .internal.utils.heuristic import fit_heuristic_models
@@ -207,8 +206,6 @@ class HeuristicModel(HeuristicModelMixin):
             self.sep,
             revenues=self.revenues,
             costs=self.costs,
-            exclude_direct=self.exclude_direct,
-            direct_channel=self.direct,
             lead_channel=self.lead,
             oppty_channel=self.oppty,
             decay_rate=self.decay_rate,
