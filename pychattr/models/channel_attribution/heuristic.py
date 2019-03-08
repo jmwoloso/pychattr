@@ -157,6 +157,7 @@ class HeuristicModel(HeuristicModelMixin):
     https://www.bizible.com/blog/marketing-attribution-models-complete-list
     https://support.google.com/analytics/answer/1662518?hl=en
     https://www.optimizesmart.com/understanding-conversion-credit-distribution-attribution-models-google-analytics/
+    https://docs.attributionapp.com/docs/time-decay-attribution-example-direct-included
     """
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
