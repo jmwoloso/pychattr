@@ -1,11 +1,14 @@
 """
-markov.py: contains the class wrapper for the Markov model used in
-channel attribution.
+Contains the class wrapper for the Markov model used in channel
+attribution.
 """
-from .internal import ChannelAttributionMixin
+# Author: Jason Wolosonovich <jason@avaland.io>
+# License: BSD 3-clause
+
+from ._mixins import MarkovModelMixin
 
 
-class MarkovModel(ChannelAttributionMixin):
+class MarkovModel(MarkovModelMixin):
     """
     Markov channel attribution model.
 
@@ -69,12 +72,20 @@ class MarkovModel(ChannelAttributionMixin):
     """
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
-                 separator=">>>", markov_order=1, n_simulations=10000,
-                 max_step=None, return_transition_probs=True,
-                 random_state=None):
+                 path_dates_feature=None, conversion_dates_feature=None,
+                 direct_channel=None, exclude_direct=False,
+                 separator=">>>", return_summary=False, markov_order=1,
+                 n_simulations=10000, max_step=None,
+                 return_transition_probs=True, random_state=None):
         super().__init__(path_feature, conversion_feature,
                          revenue_feature=revenue_feature,
-                         cost_feature=cost_feature, separator=separator)
+                         cost_feature=cost_feature,
+                         path_dates_feature=path_dates_feature,
+                         conversion_dates_feature=conversion_dates_feature,
+                         direct_channel=direct_channel,
+                         exclude_direct=exclude_direct,
+                         separator=separator,
+                         return_summary=return_summary)
         self.order = markov_order
         self.n_sim = n_simulations
         self.max_step = max_step
@@ -86,12 +97,17 @@ class MarkovModel(ChannelAttributionMixin):
 
         Parameters
         ----------
-        dataframe: pandas.DataFrame; required.
+        df: pandas.DataFrame; required.
             The dataframe containing the path data to be modeled.
 
         Returns
         -------
-        self: returns an instance of self.
+        self: returns a fitted instance of self.
         """
-        # derive the feature attributes
+        # derive the feature attributes and aggregate the dataset by
+        # path
         self._get_internals(df)
+
+
+
+        self.results_ = fit_markov()

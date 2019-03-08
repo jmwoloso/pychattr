@@ -1,11 +1,12 @@
-"""Contains the class wrapper for the heuristic models used in
-channel attribution.
+"""
+Contains the class wrapper for the heuristic models used in channel
+attribution.
 """
 # Author: Jason Wolosonovich <jason@avaland.io>
 # License: BSD 3-clause
 
-from .internal.utils import HeuristicModelMixin
-from .internal.utils.heuristic import fit_heuristic_models
+from ._mixins import HeuristicModelMixin
+from ._heuristic import fit_heuristic_models
 
 
 class HeuristicModel(HeuristicModelMixin):

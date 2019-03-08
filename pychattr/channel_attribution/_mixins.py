@@ -10,7 +10,7 @@ import abc
 import numpy as np
 
 
-class PyChAttrBase(metaclass=abc.ABCMeta):
+class AttributionModelBase(metaclass=abc.ABCMeta):
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
                  path_dates_feature=None, conversion_dates_feature=None,
@@ -110,7 +110,7 @@ class PyChAttrBase(metaclass=abc.ABCMeta):
         pass
 
 
-class HeuristicModelMixin(PyChAttrBase, metaclass=abc.ABCMeta):
+class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
                  path_dates_feature=None, conversion_dates_feature=None,
@@ -182,7 +182,7 @@ class HeuristicModelMixin(PyChAttrBase, metaclass=abc.ABCMeta):
         return heuristics
 
 
-class MarkovModelMixin(PyChAttrBase, metaclass=abc.ABCMeta):
+class MarkovModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def fit(self, df):
         super().fit(df)

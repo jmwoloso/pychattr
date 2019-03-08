@@ -1,5 +1,5 @@
 """
-Contains the model fitting logic used for the heuristic models.
+Contains the model-fitting logic used for the heuristic models.
 """
 # Author: Jason Wolosonovich <jason@avaland.io>
 # License: BSD 3-clause
@@ -10,10 +10,10 @@ import numpy as np
 import pandas as pd
 
 
-def fit_heuristics(df, heuristic, paths, conversions, sep,
-                   revenues=None, costs=None, lead_channel=None,
-                   oppty_channel=None, decay_rate=7, path_dates=None,
-                   conv_dates=None, has_rev=False, has_cost=False):
+def _fit_heuristics(df, heuristic, paths, conversions, sep,
+                    revenues=None, costs=None, lead_channel=None,
+                    oppty_channel=None, decay_rate=7, path_dates=None,
+                    conv_dates=None, has_rev=False, has_cost=False):
     """Generates the specified heuristic model using partial
     application."""
     # TODO: put in checks for each that paths meet the minimum
@@ -399,3 +399,43 @@ def fit_heuristics(df, heuristic, paths, conversions, sep,
                               sep, rev_f=revenues, cost_f=costs,
                               rev=has_rev, cost=has_cost)
     return f
+
+
+def _ensemble_results(paths, conversions, revenues, costs, separator):
+    """Blended version of all the selected heuristic models."""
+    raise NotImplementedError("This model specification will be "
+                              "available in the next minor "
+                              "release of pychattr.")
+
+
+def fit_heuristic_models(heuristics, df, paths, conversions, sep,
+                         revenues=None, costs=None,
+                         lead_channel=None, oppty_channel=None,
+                         decay_rate=7, path_dates=None,
+                         conv_dates=None):
+    """
+    Unified interface for fitting the heuristic models.
+    """
+    results_ = []
+    for heuristic in heuristics:
+        if heuristic != "ensemble_model":
+            model = _fit_heuristics(df, heuristic, paths, conversions,
+                                   sep, revenues=revenues, costs=costs,
+                                   lead_channel=lead_channel,
+                                   oppty_channel=oppty_channel,
+                                   decay_rate=decay_rate,
+                                   path_dates=path_dates,
+                                   conv_dates=conv_dates)
+
+            # the results of the current model to the results dict
+            results_.append(model())
+            # combine the results and return
+            return pd.concat(results_, axis=1)
+        # not implemented yet
+        else:
+            # use pd.merge(l,r, on="channel") then average across the
+            # row making a new column called ensemble
+            raise NotImplementedError(
+                "This model specification will be "
+                "available in the next minor "
+                "release of pychattr.")
