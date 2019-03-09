@@ -11,4 +11,4 @@ Shapley Value and Halo Effect via a streamlined sklearn-like API.
 # License: BSD 3-clause
 
 
-__version__ = "0.2.0"
+__version__ = "0.2.0.dev0"
