@@ -95,7 +95,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         # container to hold the resulting dataframes
         results = []
 
-        paths = d.loc[:, path_f].apply(lambda s: s.split(sp))
+        paths = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
         for i, path in enumerate(paths):
             df_ = pd.DataFrame({"channel": path})
@@ -130,53 +130,32 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         # container to hold the resulting dataframes
         results = []
 
-        paths = d.loc[:, path_f].apply(lambda s: s.split(sp))
+        paths = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
-        # iterate through the paths and calculate the linear touch model
         for i, path in enumerate(paths):
-            features = [
-                "channel",
-                "u_shaped_conversions"
-            ]
+            df_ = pd.DataFrame({"channel": path})
+
+            idx = len(path) - 1
+
+            df_.loc[[0, idx], "u_shaped_conversions"] = \
+                d.loc[i, conv_f] * 0.4
+
+            df_.loc[1: idx-1, "u_shaped_conversions"] = \
+                d.loc[i, conv_f] * 0.2
 
             if rev:
-                features.append("u_shaped_revenue")
+                df_.loc[[0, idx], "u_shaped_revenue"] = \
+                    d.loc[i, rev_f] * 0.4
+
             if cost:
-                features.append("u_shaped_cost")
-
-            # dataframe to hold the results of this iteration
-            df_ = pd.DataFrame(columns=features)
-
-            # for clarity
-            first_channel = path[0]
-            last_channel = path[-1]
-
-            # add the channels to the dataframe
-            for j, channel in enumerate(path):
-                df_.loc[j, "channel"] = channel
-                if channel in [first_channel, last_channel]:
-                    df_.loc[j, "weight"] = 0.4
-                else:
-                    df_.loc[j, "weight"] = 0.2 / (len(paths[i]) - 2)
-
-            # apply the weights to the values
-            df_.loc[:, "u_shaped_conversions"] = \
-                d.loc[i, conv_f].copy() * df_.loc[:, "weight"]
-
-            if rev:
-                df_.loc[:, "u_shaped_revenue"] = \
-                    d.loc[i, rev_f].copy() * df_.loc[:, "weight"]
-            if cost:
-                df_.loc[:, "u_shaped_cost"] = \
-                    d.loc[i, cost_f].copy() * df_.loc[:, "weight"]
-
-            df_ = df_.drop(columns=["weight"])
+                df_.loc[[0, idx], "u_shaped_cost"] = \
+                    d.loc[i, cost_f] * 0.2
 
             # append the result for aggregation later on
             results.append(df_)
 
-        # combine the results
-        df_ = pd.concat(results)
+            # combine the results
+        df_ = pd.concat(results).reset_index(drop=True)
 
         # columns to aggregate
         aggs = {feature: "sum" for feature in df_.columns}.pop(
