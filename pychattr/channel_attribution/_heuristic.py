@@ -20,23 +20,36 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     #  requirements for the specific heuristic function (e.g.
     #  z-shaped needs at least 5 channels per path in order to apply
     #  weights correctly)
+    print("_fit_heuristics() called.")
     def first_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
                     rev=False, cost=False):
         """First-touch attribution model."""
-        df_ = pd.DataFrame(columns=["channel"])
+        print("first_touch() called")
+        results = []
 
-        df_.loc[:, "channel"] = d.loc[:, path_f].apply(
-            lambda s: s.split(sp)[0]
-        )
+        paths = d.loc[:, path_f].apply(
+            lambda s: s.split(sep)
+        ).values
 
-        # give the first channels in each path all the credit
-        df_.loc[:, "first_touch_conversions"] = d.loc[:, conv_f].copy()
+        convs = d.loc[:, conv_f].values
 
-        if rev:
-            df_.loc[:, "first_touch_revenue"] = d.loc[:, rev_f].copy()
+        for path, conv in zip(paths,convs):
+            df_ = pd.DataFrame({"channel": path})
 
-        if cost:
-            df_.loc[:, "first_touch_cost"] = d.loc[:, cost_f].copy()
+            df_.loc[0, "first_touch_conversions"] = conv
+            df_.loc[1:, "first_touch_conversions"] = 0
+
+            if rev:
+                df_.loc[0, "first_touch_revenue"] = conv
+                df_.loc[1:, "first_touch_revenue"] = 0
+            if cost:
+                df_.loc[0, "first_touch_cost"] = conv
+                df_.loc[1:, "first_touch_cost"] = 0
+
+            results.append(df_)
+
+        # combine the results
+        df_ = pd.concat(results).reset_index(drop=True)
 
         agg = {feature: "sum" for feature in df_.columns}.pop("channel")
 
@@ -46,18 +59,32 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def last_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
                    rev=False, cost=False):
         """Last-touch attribution model."""
-        df_ = pd.DataFrame(columns=["channel"])
+        print("last_touch() called")
+        results = []
 
-        df_.loc[:, "channel"] = d.loc[:, path_f].apply(
-            lambda s: s.split(sp)[-1]
-        )
+        paths = d.loc[:, path_f].apply(
+            lambda s: s.split(sep)
+        ).values
 
-        # give the last channels in each path all the credit
-        df_.loc[:, "last_touch_conversions"] = d.loc[:, conv_f].copy()
-        if rev:
-            df_.loc[:, "last_touch_revenue"] = d.loc[:, rev_f].copy()
-        if cost:
-            df_.loc[:, "last_touch_cost"] = d.loc[:, cost_f].copy()
+        convs = d.loc[:, conv_f].values
+        for path, conv in zip(paths, convs):
+            df_ = pd.DataFrame({"channel": path})
+            idx = len(path) - 1
+
+            df_.loc[idx, "last_touch_conversions"] = conv
+            df_.loc[0: idx-1, "last_touch_conversions"] = 0
+
+            if rev:
+                df_.loc[idx, "last_touch_revenue"] = conv
+                df_.loc[0: idx-1, "last_touch_revenue"] = 0
+            if cost:
+                df_.loc[0, "last_touch_cost"] = conv
+                df_.loc[0: idx-1, "last_touch_cost"] = 0
+
+            results.append(df_)
+
+            # combine the results
+        df_ = pd.concat(results).reset_index(drop=True)
 
         agg = {feature: "sum" for feature in df_.columns}.pop("channel")
 
@@ -67,6 +94,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def linear_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
                      rev=False, cost=False):
         """Linear touch attribution model."""
+        print("linear_touch() called")
         # container to hold the resulting dataframes
         results = []
 
@@ -120,6 +148,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def u_shaped(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
                  rev=False, cost=False):
         """U-shaped (position-based) attribution model."""
+        print("u_shaped() called")
         # container to hold the resulting dataframes
         results = []
 
@@ -180,6 +209,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def w_shaped(d, path_f, conv_f, sp, lead_channel, rev_f=None,
                  cost_f=None, rev=False, cost=False):
         """W-shaped attribution model."""
+        print("w_shaped() called")
         # container to hold the resulting dataframes
         results = []
 
@@ -241,6 +271,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def z_shaped(d, path_f, conv_f, sp, lead_channel, oppty_channel,
                  rev_f=None, cost_f=None, rev=False, cost=False):
         """Z-shaped (full path) attribution model."""
+        print("z_shaped() called")
         # container to hold the resulting dataframes
         results = []
 
@@ -303,6 +334,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
                    dr=7, rev_f=None, cost_f=None, rev=False,
                    cost=False):
             """Time decay attribution model."""
+            print("time_decay() called")
             def get_weight(days_to_conversion, decay_rate):
                 """Takes the days-to-conversion and calculates the
                 attribution weight using the decay rate supplied."""
@@ -378,23 +410,27 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     # TODO: is there a cleaner way to do this?
     # the explicitly-named models need extra parameters sent to them
     if heuristic == "w_shaped":
+        print("w_shaped")
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, lead_channel, rev_f=revenues,
                               cost_f=costs, rev=has_rev, cost=has_cost)
 
     elif heuristic == "z_shaped":
+        print("z_shaped")
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, lead_channel, oppty_channel,
                               rev_f=revenues, cost_f=costs, rev=has_rev,
                               cost=has_cost)
 
     elif heuristic == "time_decay":
+        print("time_decay")
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, path_dates, conv_dates,
                               dr=decay_rate, rev_f=revenues,
                               cost_f=costs, rev=has_rev, cost=has_cost)
 
     else:
+        print(f"{heuristic}")
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, rev_f=revenues, cost_f=costs,
                               rev=has_rev, cost=has_cost)
@@ -408,17 +444,19 @@ def _ensemble_results(paths, conversions, revenues, costs, separator):
                               "release of pychattr.")
 
 
-def fit_heuristic_models(heuristics, df, paths, conversions, sep,
-                         revenues=None, costs=None,
+def fit_heuristic_models(heuristics, df, paths,
+                         conversions, sep, revenues=None, costs=None,
                          lead_channel=None, oppty_channel=None,
                          decay_rate=7, path_dates=None,
                          conv_dates=None):
     """
     Unified interface for fitting the heuristic models.
     """
+    print("fit_heuristic_models() called")
     results_ = []
     for heuristic in heuristics:
         if heuristic != "ensemble_model":
+            print(f"{heuristic}1")
             model = _fit_heuristics(df, heuristic, paths, conversions,
                                    sep, revenues=revenues, costs=costs,
                                    lead_channel=lead_channel,
@@ -429,13 +467,16 @@ def fit_heuristic_models(heuristics, df, paths, conversions, sep,
 
             # the results of the current model to the results dict
             results_.append(model())
-            # combine the results and return
-            return pd.concat(results_, axis=1)
-        # not implemented yet
-        else:
-            # use pd.merge(l,r, on="channel") then average across the
-            # row making a new column called ensemble
-            raise NotImplementedError(
-                "This model specification will be "
-                "available in the next minor "
-                "release of pychattr.")
+
+        # # not implemented yet
+        # else:
+        #     # use pd.merge(l,r, on="channel") then average across the
+        #     # row making a new column called ensemble
+        #     raise NotImplementedError(
+        #         "This model specification will be "
+        #         "available in the next minor "
+        #         "release of pychattr.")
+
+    # combine the results and return
+    results_ = [result.set_index("channel") for result in results_]
+    return pd.concat(results_, axis=1).reset_index(drop=False)
