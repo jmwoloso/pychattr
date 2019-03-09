@@ -27,21 +27,24 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         print("first_touch() called")
         results = []
 
-        paths = d.loc[:, path_f].apply(
+        ps = d.loc[:, path_f].apply(
             lambda s: s.split(sep)
         ).values
 
-        for i, path in enumerate(paths):
+        for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
 
-            df_.loc[0, "first_touch_conversions"] = d.loc[i, conv_f]
+            df_.loc[0, "first_touch_conversions"] = \
+                d.loc[i, conv_f].copy()
             df_.loc[1:, "first_touch_conversions"] = 0
 
             if rev:
-                df_.loc[0, "first_touch_revenue"] = d.loc[i, rev_f]
+                df_.loc[0, "first_touch_revenue"] = \
+                    d.loc[i, rev_f].copy()
                 df_.loc[1:, "first_touch_revenue"] = 0
             if cost:
-                df_.loc[0, "first_touch_cost"] = d.loc[i, cost_f]
+                df_.loc[0, "first_touch_cost"] = \
+                    d.loc[i, cost_f].copy()
                 df_.loc[1:, "first_touch_cost"] = 0
 
             results.append(df_)
@@ -60,22 +63,25 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         print("last_touch() called")
         results = []
 
-        paths = d.loc[:, path_f].apply(
+        ps = d.loc[:, path_f].apply(
             lambda s: s.split(sep)
         ).values
 
-        for i, path in enumerate(paths):
+        for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
             idx = len(path) - 1
 
-            df_.loc[idx, "last_touch_conversions"] = d.loc[i, conv_f]
+            df_.loc[idx, "last_touch_conversions"] = \
+                d.loc[i, conv_f].copy()
             df_.loc[0: idx-1, "last_touch_conversions"] = 0
 
             if rev:
-                df_.loc[idx, "last_touch_revenue"] = d.loc[i, rev_f]
+                df_.loc[idx, "last_touch_revenue"] = \
+                    d.loc[i, rev_f].copy()
                 df_.loc[0: idx-1, "last_touch_revenue"] = 0
             if cost:
-                df_.loc[0, "last_touch_cost"] = d.loc[i, cost_f]
+                df_.loc[0, "last_touch_cost"] = \
+                    d.loc[i, cost_f].copy()
                 df_.loc[0: idx-1, "last_touch_cost"] = 0
 
             results.append(df_)
@@ -95,21 +101,21 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         # container to hold the resulting dataframes
         results = []
 
-        paths = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
+        ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
-        for i, path in enumerate(paths):
+        for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
 
             df_.loc[:, "linear_touch_conversions"] = \
-                d.loc[i, conv_f] / len(path)
+                d.loc[i, conv_f].copy() / len(path)
 
             if rev:
                 df_.loc[:, "linear_touch_revenue"] = \
-                    d.loc[i, rev_f] / len(path)
+                    d.loc[i, rev_f].copy() / len(path)
 
             if cost:
                 df_.loc[:, "linear_touch_cost"] = \
-                    d.loc[i, cost_f] / len(path)
+                    d.loc[i, cost_f].copy() / len(path)
 
             # append the result for aggregation later on
             results.append(df_)
@@ -130,26 +136,36 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         # container to hold the resulting dataframes
         results = []
 
-        paths = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
+        ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
-        for i, path in enumerate(paths):
+        for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
 
-            idx = len(path) - 1
+            ix = list(range(len(path)))
+            idx = [0, len(path) - 1]
 
-            df_.loc[[0, idx], "u_shaped_conversions"] = \
-                d.loc[i, conv_f] * 0.4
+            ix.pop(idx[0])
+            ix.pop(-1)
 
-            df_.loc[1: idx-1, "u_shaped_conversions"] = \
-                d.loc[i, conv_f] * 0.2
+            df_.loc[idx, "u_shaped_conversions"] = \
+                0.4 * d.loc[i, conv_f].copy()
+
+            df_.loc[ix, "u_shaped_conversions"] = \
+                (0.2 / len(ix)) * d.loc[i, conv_f].copy()
 
             if rev:
-                df_.loc[[0, idx], "u_shaped_revenue"] = \
-                    d.loc[i, rev_f] * 0.4
+                df_.loc[idx, "u_shaped_revenue"] = \
+                    0.4 * d.loc[i, rev_f].copy()
+
+                df_.loc[ix, "u_shaped_revenue"] = \
+                    (0.2 / len(ix)) * d.loc[i, rev_f].copy()
 
             if cost:
-                df_.loc[[0, idx], "u_shaped_cost"] = \
-                    d.loc[i, cost_f] * 0.2
+                df_.loc[idx, "u_shaped_cost"] = \
+                    0.4 * d.loc[i, cost_f]
+
+                df_.loc[ix, "u_shaped_cost"] = \
+                    (0.2 / len(ix)) * d.loc[i, cost_f].copy()
 
             # append the result for aggregation later on
             results.append(df_)
@@ -170,48 +186,45 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         # container to hold the resulting dataframes
         results = []
 
-        paths = d.loc[:, path_f].apply(lambda s: s.split(sp))
+        ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
-        # iterate through the paths and calculate the linear touch model
-        for i, path in enumerate(paths):
-            features = [
-                "channel",
-                "w_shaped_conversions"
-            ]
+        for i, path in enumerate(ps):
+            df_ = pd.DataFrame({"channel": path})
 
-            if rev:
-                features.append("w_shaped_revenue")
-            if cost:
-                features.append("w_shaped_cost")
+            # get all indices in the current path
+            ix = list(range(len(path)))
 
-            # dataframe to hold the results of this iteration
-            df_ = pd.DataFrame(columns=features)
+            # indices of the major channels
+            idx = [0, np.argmax(np.array(path) == lead_channel),
+                   len(path) - 1]
+            print(idx)
 
-            # for clarity
-            first_channel = path[0]
-            last_channel = path[-1]
+            # remove indices of major channels
+            ix.pop(idx[1])
+            ix.pop(0)
+            ix.pop(-1)
 
-            # add the channels to the dataframe
-            for j, channel in enumerate(path):
-                df_.loc[j, "channel"] = channel
-                if channel in [first_channel, lead_channel,
-                               last_channel]:
-                    df_.loc[j, "weight"] = 0.3
-                else:
-                    df_.loc[j, "weight"] = 0.1 / (len(paths[i]) - 3)
+            # apply the weight to the major channels
+            df_.loc[idx, "w_shaped_conversions"] = \
+                0.3 * d.loc[i, conv_f].copy()
 
-            # apply the weights to the values
-            df_.loc[:, "w_shaped_conversions"] = \
-                d.loc[i, conv_f].copy() * df_.loc[:, "weight"]
+            # apply the weight to the minor channels
+            df_.loc[ix, "w_shaped_conversions"] = \
+                (0.1 / len(ix)) * d.loc[i, conv_f].copy()
 
             if rev:
-                df_.loc[:, "w_shaped_revenue"] = \
-                    d.loc[i, rev_f].copy() * df_.loc[:, "weight"]
-            if cost:
-                df_.loc[:, "w_shaped_cost"] = \
-                    d.loc[i, cost_f].copy() * df_.loc[:, "weight"]
+                df_.loc[idx, "w_shaped_revenue"] = \
+                    0.3 * d.loc[i, rev_f].copy()
 
-            df_ = df_.drop(columns=["weight"])
+                df_.loc[ix, "w_shaped_revenue"] = \
+                    (0.1 / len(ix)) * d.loc[i, rev_f].copy()
+
+            if cost:
+                df_.loc[idx, "w_shaped_cost"] = \
+                    0.3 * d.loc[i, cost_f].copy()
+
+                df_.loc[ix, "w_shaped_cost"] = \
+                    (0.1 / len(ix)) * d.loc[i, cost_f].copy()
 
             # append the result for aggregation later on
             results.append(df_)
