@@ -31,19 +31,17 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
             lambda s: s.split(sep)
         ).values
 
-        convs = d.loc[:, conv_f].values
-
-        for path, conv in zip(paths,convs):
+        for i, path in enumerate(paths):
             df_ = pd.DataFrame({"channel": path})
 
-            df_.loc[0, "first_touch_conversions"] = conv
+            df_.loc[0, "first_touch_conversions"] = d.loc[i, conv_f]
             df_.loc[1:, "first_touch_conversions"] = 0
 
             if rev:
-                df_.loc[0, "first_touch_revenue"] = conv
+                df_.loc[0, "first_touch_revenue"] = d.loc[i, rev_f]
                 df_.loc[1:, "first_touch_revenue"] = 0
             if cost:
-                df_.loc[0, "first_touch_cost"] = conv
+                df_.loc[0, "first_touch_cost"] = d.loc[i, cost_f]
                 df_.loc[1:, "first_touch_cost"] = 0
 
             results.append(df_)
@@ -66,19 +64,18 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
             lambda s: s.split(sep)
         ).values
 
-        convs = d.loc[:, conv_f].values
-        for path, conv in zip(paths, convs):
+        for i, path in enumerate(paths):
             df_ = pd.DataFrame({"channel": path})
             idx = len(path) - 1
 
-            df_.loc[idx, "last_touch_conversions"] = conv
+            df_.loc[idx, "last_touch_conversions"] = d.loc[i, conv_f]
             df_.loc[0: idx-1, "last_touch_conversions"] = 0
 
             if rev:
-                df_.loc[idx, "last_touch_revenue"] = conv
+                df_.loc[idx, "last_touch_revenue"] = d.loc[i, rev_f]
                 df_.loc[0: idx-1, "last_touch_revenue"] = 0
             if cost:
-                df_.loc[0, "last_touch_cost"] = conv
+                df_.loc[0, "last_touch_cost"] = d.loc[i, cost_f]
                 df_.loc[0: idx-1, "last_touch_cost"] = 0
 
             results.append(df_)
@@ -100,44 +97,25 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
 
         paths = d.loc[:, path_f].apply(lambda s: s.split(sp))
 
-        # iterate through the paths and calculate the linear touch model
         for i, path in enumerate(paths):
-            features = [
-                "channel",
-                "linear_touch_conversions"
-            ]
+            df_ = pd.DataFrame({"channel": path})
 
-            if rev:
-                features.append("linear_touch_revenue")
-            if cost:
-                features.append("linear_touch_cost")
-
-            # dataframe to hold the results of this iteration
-            df_ = pd.DataFrame(columns=features)
-
-            # add the channels to the dataframe
-            for j, channel in enumerate(path):
-                df_.loc[j, "channel"] = channel
-
-            # divide the values evenly among the channels
-            weight = 1 / df_.shape[0]
-
-            # apply the weights to the values
             df_.loc[:, "linear_touch_conversions"] = \
-                d.loc[i, conv_f].copy() * weight
+                d.loc[i, conv_f] / len(path)
 
             if rev:
                 df_.loc[:, "linear_touch_revenue"] = \
-                    d.loc[i, rev_f].copy() * weight
+                    d.loc[i, rev_f] / len(path)
+
             if cost:
                 df_.loc[:, "linear_touch_cost"] = \
-                    d.loc[i, cost_f].copy() * weight
+                    d.loc[i, cost_f] / len(path)
 
             # append the result for aggregation later on
             results.append(df_)
 
         # combine the results
-        df_ = pd.concat(results)
+        df_ = pd.concat(results).reset_index(drop=True)
 
         # columns to aggregate
         aggs = {feature: "sum" for feature in df_.columns}.pop(
