@@ -175,7 +175,7 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
         if self.decay:
             heuristics.append("time_decay")
         if self.ensemble:
-            heuristics.append("ensemble_model")
+            heuristics.append("ensemble")
 
         # set an attribute for the models to create
         self._heuristics = heuristics

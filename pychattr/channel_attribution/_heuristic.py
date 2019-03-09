@@ -407,11 +407,34 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     return f
 
 
-def _ensemble_results(paths, conversions, revenues, costs, separator):
+def _ensemble_results(d, heuristics, rev=None, cost=None):
     """Blended version of all the selected heuristic models."""
-    raise NotImplementedError("This model specification will be "
-                              "available in the next minor "
-                              "release of pychattr.")
+    df_ = d.copy()
+
+    convs = []
+    # these may not be needed
+    revs = []
+    costs = []
+
+    # get the features we're ensembling
+    for heuristic in heuristics:
+        convs.append(f"{heuristic}_conversions")
+        # these might not be needed
+        revs.append(f"{heuristic}_revenue")
+        costs.append(f"{heuristic}_cost")
+
+    df_.loc[:, "ensemble_conversions"] = df_.loc[:, convs].copy().sum(
+        axis=1)
+
+    if rev:
+        df_.loc[:, "ensemble_revenue"] = df_.loc[:, revs].copy().sum(
+            axis=1)
+
+    if cost:
+        df_.loc[:, "ensemble_cost"] = df_.loc[:, costs].copy().sum(
+            axis=1)
+
+    return df_
 
 
 def fit_heuristic_models(heuristics, df, paths,
@@ -424,9 +447,9 @@ def fit_heuristic_models(heuristics, df, paths,
     Unified interface for fitting the heuristic models.
     """
     print("fit_heuristic_models() called")
-    results_ = []
+    results = []
     for heuristic in heuristics:
-        if heuristic != "ensemble_model":
+        if heuristic != "ensemble":
             print(f"{heuristic}1")
             model = _fit_heuristics(df, heuristic, paths, conversions,
                                     sep, revenues=revenues, costs=costs,
@@ -439,18 +462,17 @@ def fit_heuristic_models(heuristics, df, paths,
                                     has_cost=has_cost)
 
             # the results of the current model to the results dict
-            results_.append(model())
+            results.append(model())
 
-        # # not implemented yet
-        # else:
-        #     # use pd.merge(l,r, on="channel") then average across the
-        #     # row making a new column called ensemble
-        #     raise NotImplementedError(
-        #         "This model specification will be "
-        #         "available in the next minor "
-        #         "release of pychattr.")
+    # combine the results
+    results = [result.set_index("channel") for result in results]
+    results = pd.concat(results, axis=1).reset_index(drop=False)
 
-    # combine the results and return
-    results_ = [result.set_index("channel") for result in results_]
+    print(heuristics)
 
-    return pd.concat(results_, axis=1).reset_index(drop=False)
+    # ensemble results
+    if "ensemble" in heuristics:
+        heuristics.pop(-1)
+        results = _ensemble_results(results, heuristics,
+                                    rev=has_rev, cost=has_cost)
+    return results
