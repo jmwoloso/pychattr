@@ -16,6 +16,7 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
                  path_dates_feature=None, conversion_dates_feature=None,
                  direct_channel=None, exclude_direct=False,
                  separator=">>>", return_summary=False):
+        print("AttributionModelBase instantiated.")
         self.paths = path_feature
         self.conversions = conversion_feature
         self.revenues = revenue_feature
@@ -43,6 +44,7 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
         -------
         self
         """
+        print("AttributionModelBase.fit() called.")
         self._df = df.copy()
 
         # used in various places by both models
@@ -73,35 +75,10 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
 
                 paths_.append(path_)
 
-            self._idx_arr = np.array(idxs)
+            self._idx_arr = np.asarray(idxs)
 
             # make the replacements
             self._df.loc[:, self.paths] = paths_
-
-        return self
-
-    def _get_internals(self, df):
-        """Derives internal attributes used during model
-        construction."""
-        # markov only
-        self._df = df.copy()
-
-        # remove direct if specified
-        if self.exclude_direct:
-            pattern = self.sep + "{}".format(self.direct)
-            self._df.loc[:, self.paths] = \
-                self._df.loc[:, self.paths].str.replace(pattern, "",
-                                                        regex=False)
-        aggs = {
-            self.conversions: "sum"
-        }
-        if self._has_rev:
-            aggs[self.revenues] = "sum"
-        if self._has_cost:
-            aggs[self.costs] = "sum"
-
-        self._df = self._df.groupby([self.paths], as_index=False)\
-            .agg(aggs)
 
         return self
 
@@ -131,6 +108,7 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
                          exclude_direct=exclude_direct,
                          separator=separator,
                          return_summary=return_summary)
+        print("HeuristicMixin instantiated.")
 
         self.lead = lead_channel
         self.oppty = opportunity_channel
@@ -146,21 +124,41 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def fit(self, df):
+        print("HeuristicMixin.fit() called.")
         super().fit(df)
+        print(self._idx_arr)
+        print(type(self._idx_arr))
 
-    def _get_internals(self, df):
-        """Extends the inherited method for heuristic-specifc
-        internals."""
-        super()._get_internals(df)
+        self._get_heuristics()
 
-        # get the list of heuristic models to build
-        self._heuristics = self._get_heuristics()
+        # if we're fitting a time decay model we also need to
+        # remove the dates corresponding to the direct channel
+        if "time_decay" in self._heuristics:
+            dates = self._df.loc[:, self.path_dates].apply(
+                lambda s: np.array(s.split(self.sep))
+            ).values
+
+            # we'll reconstruct the path strings
+            dates_ = []
+            for idx, date in zip(self._idx_arr, dates):
+                print(date)
+                # remove the direct channel elements
+                date_ = np.delete(date, idx)
+
+                # reconstruct the string
+                date_ = "{}".format(self.sep).join(date_)
+
+                dates_.append(date_)
+
+            # make the replacements
+            self._df.loc[:, self.path_dates] = dates_
 
         return self
 
     def _get_heuristics(self):
-        """Get the heuristic models to build"""
+        """Get the heuristic models to build."""
         # extensions
+        print("HeuristicMixin._get_heuristics() called.")
         heuristics = []
         if self.first:
             heuristics.append("first_touch")
@@ -179,7 +177,10 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
         if self.ensemble:
             heuristics.append("ensemble_model")
 
-        return heuristics
+        # set an attribute for the models to create
+        self._heuristics = heuristics
+
+        return self
 
 
 class MarkovModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):

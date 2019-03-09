@@ -188,13 +188,14 @@ class HeuristicModel(HeuristicModelMixin):
                          time_decay=time_decay,
                          ensemble_results=ensemble_results,
                          time_decay_days=time_decay_days)
+        print("HeuristicModel instantiated.")
 
     def fit(self, df):
         # derive internal attributes that will be used during model
         # construction
-        self._get_internals(df)
-
-
+        # self._get_internals(df)
+        super().fit(df)
+        print("HeuristicModel.fit() called")
 
         # attempt to convert the values to the types required for
         # modeling
