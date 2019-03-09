@@ -21,6 +21,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     #  z-shaped needs at least 5 channels per path in order to apply
     #  weights correctly)
     print("_fit_heuristics() called.")
+
     def first_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
                     rev=False, cost=False):
         """First-touch attribution model."""
@@ -316,7 +317,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
             # container to hold the resulting dataframes
             results = []
 
-            paths = d.loc[:, path_f].apply(lambda s: s.split(sp))\
+            ps = d.loc[:, path_f].apply(lambda s: s.split(sp))\
                 .values
             dates = d.loc[:, path_dates].apply(lambda s: s.split(
                 sp)).values
@@ -324,29 +325,27 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
 
             # iterate through the paths and calculate the linear touch
             # model
-            for i, (path, date, c_date) in enumerate(zip(paths, dates,
+            for i, (path, date, c_date) in enumerate(zip(ps, dates,
                                                          c_dates)):
-                features = [
-                    "channel",
-                    "time_decay_conversions"
-                ]
+                print(path)
+                print(date)
+                print(c_date)
+                df_ = pd.DataFrame(
+                    {
+                        "channel": path,
+                        "channel_date": date,
+                        "conv_date": [c_date] * len(path)
+                    }
+                )
 
-                if rev:
-                    features.append("time_decay_revenue")
-                if cost:
-                    features.append("time_decay_cost")
-
-                # dataframe to hold the results of this iteration
-                df_ = pd.DataFrame(columns=features)
-
-                # add the channels to the dataframe
-                for j, (channel, dt) in enumerate(zip(path, date)):
-                    df_.loc[j, "channel"] = channel
-                    # calculate the days before conversion for each
-                    # channel
-                    df_.loc[j, "dbc"] = (
-                        np.datetime64(c_date) - np.datetime64(dt)
-                    ) / np.timedelta64(1, "D")
+                # get the days before conversion for each channel in
+                # the current path
+                df_.loc[:, "dbc"] = (
+                    df_.loc[:, "conv_date"]
+                    .astype("datetime64[ns]").copy() -
+                    df_.loc[:, "channel_date"]
+                    .astype("datetime64[ns]").copy()
+                ) / np.timedelta64(1, "D")
 
                 df_.loc[:, "weight"] = \
                     get_weight_v(df_.loc[:, "dbc"], dr)
@@ -429,12 +428,12 @@ def fit_heuristic_models(heuristics, df, paths,
         if heuristic != "ensemble_model":
             print(f"{heuristic}1")
             model = _fit_heuristics(df, heuristic, paths, conversions,
-                                   sep, revenues=revenues, costs=costs,
-                                   lead_channel=lead_channel,
-                                   oppty_channel=oppty_channel,
-                                   decay_rate=decay_rate,
-                                   path_dates=path_dates,
-                                   conv_dates=conv_dates)
+                                    sep, revenues=revenues, costs=costs,
+                                    lead_channel=lead_channel,
+                                    oppty_channel=oppty_channel,
+                                    decay_rate=decay_rate,
+                                    path_dates=path_dates,
+                                    conv_dates=conv_dates)
 
             # the results of the current model to the results dict
             results_.append(model())
@@ -450,4 +449,5 @@ def fit_heuristic_models(heuristics, df, paths,
 
     # combine the results and return
     results_ = [result.set_index("channel") for result in results_]
+
     return pd.concat(results_, axis=1).reset_index(drop=False)
