@@ -16,7 +16,7 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
                  path_dates_feature=None, conversion_dates_feature=None,
                  direct_channel=None, exclude_direct=False,
                  separator=">>>", return_summary=False):
-        print("AttributionModelBase instantiated.")
+
         self.paths = path_feature
         self.conversions = conversion_feature
         self.revenues = revenue_feature
@@ -44,7 +44,7 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
         -------
         self
         """
-        print("AttributionModelBase.fit() called.")
+
         self._df = df.copy()
 
         # used in various places by both models
@@ -108,7 +108,6 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
                          exclude_direct=exclude_direct,
                          separator=separator,
                          return_summary=return_summary)
-        print("HeuristicMixin instantiated.")
 
         self.lead = lead_channel
         self.oppty = opportunity_channel
@@ -124,16 +123,13 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def fit(self, df):
-        print("HeuristicMixin.fit() called.")
         super().fit(df)
-        print(self._idx_arr)
-        print(type(self._idx_arr))
 
         self._get_heuristics()
 
         # if we're fitting a time decay model we also need to
         # remove the dates corresponding to the direct channel
-        if "time_decay" in self._heuristics:
+        if "time_decay" in self._heuristics and self.exclude_direct:
             dates = self._df.loc[:, self.path_dates].apply(
                 lambda s: np.array(s.split(self.sep))
             ).values
@@ -157,8 +153,6 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
 
     def _get_heuristics(self):
         """Get the heuristic models to build."""
-        # extensions
-        print("HeuristicMixin._get_heuristics() called.")
         heuristics = []
         if self.first:
             heuristics.append("first_touch")

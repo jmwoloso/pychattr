@@ -20,12 +20,10 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     #  requirements for the specific heuristic function (e.g.
     #  z-shaped needs at least 5 channels per path in order to apply
     #  weights correctly)
-    print("_fit_heuristics() called.")
 
     def first_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
                     rev=False, cost=False):
         """First-touch attribution model."""
-        print("first_touch() called")
         results = []
 
         ps = d.loc[:, path_f].apply(
@@ -61,7 +59,6 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def last_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
                    rev=False, cost=False):
         """Last-touch attribution model."""
-        print("last_touch() called")
         results = []
 
         ps = d.loc[:, path_f].apply(
@@ -98,7 +95,6 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def linear_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
                      rev=False, cost=False):
         """Linear touch attribution model."""
-        print("linear_touch() called")
         # container to hold the resulting dataframes
         results = []
 
@@ -133,7 +129,6 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def u_shaped(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
                  rev=False, cost=False):
         """U-shaped (position-based) attribution model."""
-        print("u_shaped() called")
         # container to hold the resulting dataframes
         results = []
 
@@ -142,31 +137,45 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
 
-            ix = list(range(len(path)))
-            idx = [0, len(path) - 1]
+            # we really need at least 3 channels for this model type
+            if len(path) < 3:
+                # this just becomes a linear model
+                df_.loc[:, "u_shaped_conversions"] = \
+                    d.loc[i, conv_f].copy() / len(path)
 
-            ix.pop(idx[0])
-            ix.pop(-1)
+                if rev:
+                    df_.loc[:, "u_shaped_revenue"] = \
+                        d.loc[i, rev_f].copy() / len(path)
 
-            df_.loc[idx, "u_shaped_conversions"] = \
-                0.4 * d.loc[i, conv_f].copy()
+                if cost:
+                    df_.loc[:, "u_shaped_cost"] = \
+                        d.loc[i, cost_f].copy() / len(path)
+            else:
+                ix = list(range(len(path)))
+                idx = [0, len(path) - 1]
 
-            df_.loc[ix, "u_shaped_conversions"] = \
-                (0.2 / len(ix)) * d.loc[i, conv_f].copy()
+                ix.pop(idx[0])
+                ix.pop(-1)
 
-            if rev:
-                df_.loc[idx, "u_shaped_revenue"] = \
-                    0.4 * d.loc[i, rev_f].copy()
+                df_.loc[idx, "u_shaped_conversions"] = \
+                    0.4 * d.loc[i, conv_f].copy()
 
-                df_.loc[ix, "u_shaped_revenue"] = \
-                    (0.2 / len(ix)) * d.loc[i, rev_f].copy()
+                df_.loc[ix, "u_shaped_conversions"] = \
+                    (0.2 / len(ix)) * d.loc[i, conv_f].copy()
 
-            if cost:
-                df_.loc[idx, "u_shaped_cost"] = \
-                    0.4 * d.loc[i, cost_f]
+                if rev:
+                    df_.loc[idx, "u_shaped_revenue"] = \
+                        0.4 * d.loc[i, rev_f].copy()
 
-                df_.loc[ix, "u_shaped_cost"] = \
-                    (0.2 / len(ix)) * d.loc[i, cost_f].copy()
+                    df_.loc[ix, "u_shaped_revenue"] = \
+                        (0.2 / len(ix)) * d.loc[i, rev_f].copy()
+
+                if cost:
+                    df_.loc[idx, "u_shaped_cost"] = \
+                        0.4 * d.loc[i, cost_f]
+
+                    df_.loc[ix, "u_shaped_cost"] = \
+                        (0.2 / len(ix)) * d.loc[i, cost_f].copy()
 
             # append the result for aggregation later on
             results.append(df_)
@@ -183,7 +192,6 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def w_shaped(d, path_f, conv_f, sp, lead_channel, rev_f=None,
                  cost_f=None, rev=False, cost=False):
         """W-shaped attribution model."""
-        print("w_shaped() called")
         # container to hold the resulting dataframes
         results = []
 
@@ -192,40 +200,54 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
 
-            # get all indices in the current path
-            ix = list(range(len(path)))
+            # we really need at least 4 channels for this model type
+            if len(path) < 4:
+                # this just becomes a linear model
+                df_.loc[:, "w_shaped_conversions"] = \
+                    d.loc[i, conv_f].copy() / len(path)
 
-            # indices of the major channels
-            idx = [0, np.argmax(np.array(path) == lead_channel),
-                   len(path) - 1]
-            print(idx)
+                if rev:
+                    df_.loc[:, "w_shaped_revenue"] = \
+                        d.loc[i, rev_f].copy() / len(path)
 
-            # remove indices of major channels
-            ix.pop(idx[1])
-            ix.pop(0)
-            ix.pop(-1)
+                if cost:
+                    df_.loc[:, "w_shaped_cost"] = \
+                        d.loc[i, cost_f].copy() / len(path)
+            else:
+                # get all indices in the current path
+                ix = list(range(len(path)))
 
-            # apply the weight to the major channels
-            df_.loc[idx, "w_shaped_conversions"] = \
-                0.3 * d.loc[i, conv_f].copy()
+                # indices of the major channels
+                idx = [0, np.argmax(np.array(path) == lead_channel),
+                       len(path) - 1]
+                print(idx)
 
-            # apply the weight to the minor channels
-            df_.loc[ix, "w_shaped_conversions"] = \
-                (0.1 / len(ix)) * d.loc[i, conv_f].copy()
+                # remove indices of major channels
+                ix.pop(idx[1])
+                ix.pop(0)
+                ix.pop(-1)
 
-            if rev:
-                df_.loc[idx, "w_shaped_revenue"] = \
-                    0.3 * d.loc[i, rev_f].copy()
+                # apply the weight to the major channels
+                df_.loc[idx, "w_shaped_conversions"] = \
+                    0.3 * d.loc[i, conv_f].copy()
 
-                df_.loc[ix, "w_shaped_revenue"] = \
-                    (0.1 / len(ix)) * d.loc[i, rev_f].copy()
+                # apply the weight to the minor channels
+                df_.loc[ix, "w_shaped_conversions"] = \
+                    (0.1 / len(ix)) * d.loc[i, conv_f].copy()
 
-            if cost:
-                df_.loc[idx, "w_shaped_cost"] = \
-                    0.3 * d.loc[i, cost_f].copy()
+                if rev:
+                    df_.loc[idx, "w_shaped_revenue"] = \
+                        0.3 * d.loc[i, rev_f].copy()
 
-                df_.loc[ix, "w_shaped_cost"] = \
-                    (0.1 / len(ix)) * d.loc[i, cost_f].copy()
+                    df_.loc[ix, "w_shaped_revenue"] = \
+                        (0.1 / len(ix)) * d.loc[i, rev_f].copy()
+
+                if cost:
+                    df_.loc[idx, "w_shaped_cost"] = \
+                        0.3 * d.loc[i, cost_f].copy()
+
+                    df_.loc[ix, "w_shaped_cost"] = \
+                        (0.1 / len(ix)) * d.loc[i, cost_f].copy()
 
             # append the result for aggregation later on
             results.append(df_)
@@ -242,7 +264,6 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     def z_shaped(d, path_f, conv_f, sp, lead_channel, oppty_channel,
                  rev_f=None, cost_f=None, rev=False, cost=False):
         """Z-shaped (full path) attribution model."""
-        print("z_shaped() called")
         # container to hold the resulting dataframes
         results = []
 
@@ -251,44 +272,58 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
 
-            # get all indices in the current path
-            ix = list(range(len(path)))
+            # we really need at least 5 channels for this model type
+            if len(path) < 5:
+                # this just becomes a linear model
+                df_.loc[:, "z_shaped_conversions"] = \
+                    d.loc[i, conv_f].copy() / len(path)
 
-            # indices of the major channels
-            idx = [
-                0,
-                np.argmax(np.array(path) == lead_channel),
-                np.argmax(np.array(path) == oppty_channel),
-                len(path) - 1
-            ]
+                if rev:
+                    df_.loc[:, "z_shaped_revenue"] = \
+                        d.loc[i, rev_f].copy() / len(path)
 
-            # remove indices of major channels
-            ix.pop(idx[1])
-            ix.pop(idx[2] - 1)
-            ix.pop(0)
-            ix.pop(-1)
+                if cost:
+                    df_.loc[:, "z_shaped_cost"] = \
+                        d.loc[i, cost_f].copy() / len(path)
+            else:
+                # get all indices in the current path
+                ix = list(range(len(path)))
 
-            # apply the weight to the major channels
-            df_.loc[idx, "z_shaped_conversions"] = \
-                0.225 * d.loc[i, conv_f].copy()
+                # indices of the major channels
+                idx = [
+                    0,
+                    np.argmax(np.array(path) == lead_channel),
+                    np.argmax(np.array(path) == oppty_channel),
+                    len(path) - 1
+                ]
 
-            # apply the weight to the minor channels
-            df_.loc[ix, "z_shaped_conversions"] = \
-                (0.1 / len(ix)) * d.loc[i, conv_f].copy()
+                # remove indices of major channels
+                ix.pop(idx[1])
+                ix.pop(idx[2] - 1)
+                ix.pop(0)
+                ix.pop(-1)
 
-            if rev:
-                df_.loc[idx, "z_shaped_revenue"] = \
-                    0.225 * d.loc[i, rev_f].copy()
+                # apply the weight to the major channels
+                df_.loc[idx, "z_shaped_conversions"] = \
+                    0.225 * d.loc[i, conv_f].copy()
 
-                df_.loc[ix, "z_shaped_revenue"] = \
-                    (0.1 / len(ix)) * d.loc[i, rev_f].copy()
+                # apply the weight to the minor channels
+                df_.loc[ix, "z_shaped_conversions"] = \
+                    (0.1 / len(ix)) * d.loc[i, conv_f].copy()
 
-            if cost:
-                df_.loc[idx, "z_shaped_cost"] = \
-                    0.225 * d.loc[i, cost_f].copy()
+                if rev:
+                    df_.loc[idx, "z_shaped_revenue"] = \
+                        0.225 * d.loc[i, rev_f].copy()
 
-                df_.loc[ix, "z_shaped_cost"] = \
-                    (0.1 / len(ix)) * d.loc[i, cost_f].copy()
+                    df_.loc[ix, "z_shaped_revenue"] = \
+                        (0.1 / len(ix)) * d.loc[i, rev_f].copy()
+
+                if cost:
+                    df_.loc[idx, "z_shaped_cost"] = \
+                        0.225 * d.loc[i, cost_f].copy()
+
+                    df_.loc[ix, "z_shaped_cost"] = \
+                        (0.1 / len(ix)) * d.loc[i, cost_f].copy()
 
             # append the result for aggregation later on
             results.append(df_)
@@ -306,7 +341,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
                    dr=7, rev_f=None, cost_f=None, rev=False,
                    cost=False):
             """Time decay attribution model."""
-            print("time_decay() called")
+
             def get_weight(days_to_conversion, decay_rate):
                 """Takes the days-to-conversion and calculates the
                 attribution weight using the decay rate supplied."""
@@ -450,7 +485,6 @@ def fit_heuristic_models(heuristics, df, paths,
     results = []
     for heuristic in heuristics:
         if heuristic != "ensemble":
-            print(f"{heuristic}1")
             model = _fit_heuristics(df, heuristic, paths, conversions,
                                     sep, revenues=revenues, costs=costs,
                                     lead_channel=lead_channel,
