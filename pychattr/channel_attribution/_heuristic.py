@@ -29,7 +29,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         results = []
 
         ps = d.loc[:, path_f].apply(
-            lambda s: s.split(sep)
+            lambda s: s.split(sp)
         ).values
 
         for i, path in enumerate(ps):
@@ -65,7 +65,7 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         results = []
 
         ps = d.loc[:, path_f].apply(
-            lambda s: s.split(sep)
+            lambda s: s.split(sp)
         ).values
 
         for i, path in enumerate(ps):
@@ -418,7 +418,8 @@ def fit_heuristic_models(heuristics, df, paths,
                          conversions, sep, revenues=None, costs=None,
                          lead_channel=None, oppty_channel=None,
                          decay_rate=7, path_dates=None,
-                         conv_dates=None):
+                         conv_dates=None, has_rev=False,
+                         has_cost=False):
     """
     Unified interface for fitting the heuristic models.
     """
@@ -433,7 +434,9 @@ def fit_heuristic_models(heuristics, df, paths,
                                     oppty_channel=oppty_channel,
                                     decay_rate=decay_rate,
                                     path_dates=path_dates,
-                                    conv_dates=conv_dates)
+                                    conv_dates=conv_dates,
+                                    has_rev=has_rev,
+                                    has_cost=has_cost)
 
             # the results of the current model to the results dict
             results_.append(model())

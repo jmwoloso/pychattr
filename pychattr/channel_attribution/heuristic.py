@@ -214,7 +214,9 @@ class HeuristicModel(HeuristicModelMixin):
             oppty_channel=self.oppty,
             decay_rate=self.decay_rate,
             path_dates=self.path_dates,
-            conv_dates=self.conv_dates
+            conv_dates=self.conv_dates,
+            has_rev=self._has_rev,
+            has_cost=self._has_cost
         )
 
         print("Class fit ended")
