@@ -245,48 +245,49 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         # container to hold the resulting dataframes
         results = []
 
-        paths = d.loc[:, path_f].apply(lambda s: s.split(sp))
+        ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
-        # iterate through the paths and calculate the linear touch model
-        for i, path in enumerate(paths):
-            features = [
-                "channel",
-                "z_shaped_conversions"
+        for i, path in enumerate(ps):
+            df_ = pd.DataFrame({"channel": path})
+
+            # get all indices in the current path
+            ix = list(range(len(path)))
+
+            # indices of the major channels
+            idx = [
+                0,
+                np.argmax(np.array(path) == lead_channel),
+                np.argmax(np.array(path) == oppty_channel),
+                len(path) - 1
             ]
 
-            if rev:
-                features.append("z_shaped_revenue")
-            if cost:
-                features.append("z_shaped_cost")
+            # remove indices of major channels
+            ix.pop(idx[1])
+            ix.pop(idx[2] - 1)
+            ix.pop(0)
+            ix.pop(-1)
 
-            # dataframe to hold the results of this iteration
-            df_ = pd.DataFrame(columns=features)
+            # apply the weight to the major channels
+            df_.loc[idx, "z_shaped_conversions"] = \
+                0.225 * d.loc[i, conv_f].copy()
 
-            # for clarity
-            first_channel = path[0]
-            last_channel = path[-1]
-
-            # add the channels to the dataframe
-            for j, channel in enumerate(path):
-                df_.loc[j, "channel"] = channel
-                if channel in [first_channel, lead_channel,
-                               oppty_channel, last_channel]:
-                    df_.loc[j, "weight"] = 0.225
-                else:
-                    df_.loc[j, "weight"] = 0.1 / (len(paths[i]) - 3)
-
-            # apply the weights to the values
-            df_.loc[:, "z_shaped_conversions"] = \
-                d.loc[i, conv_f].copy() * df_.loc[:, "weight"]
+            # apply the weight to the minor channels
+            df_.loc[ix, "z_shaped_conversions"] = \
+                (0.1 / len(ix)) * d.loc[i, conv_f].copy()
 
             if rev:
-                df_.loc[:, "z_shaped_revenue"] = \
-                    d.loc[i, rev_f].copy() * df_.loc[:, "weight"]
-            if cost:
-                df_.loc[:, "z_shaped_cost"] = \
-                    d.loc[i, cost_f].copy() * df_.loc[:, "weight"]
+                df_.loc[idx, "z_shaped_revenue"] = \
+                    0.225 * d.loc[i, rev_f].copy()
 
-            df_ = df_.drop(columns=["weight"])
+                df_.loc[ix, "z_shaped_revenue"] = \
+                    (0.1 / len(ix)) * d.loc[i, rev_f].copy()
+
+            if cost:
+                df_.loc[idx, "z_shaped_cost"] = \
+                    0.225 * d.loc[i, cost_f].copy()
+
+                df_.loc[ix, "z_shaped_cost"] = \
+                    (0.1 / len(ix)) * d.loc[i, cost_f].copy()
 
             # append the result for aggregation later on
             results.append(df_)
