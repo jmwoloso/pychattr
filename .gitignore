@@ -255,7 +255,7 @@ docs/
 notebooks/
 data/
 python_scripts/
-channel_attribution.py
+_channel_attribution.py
 dev.py
-pychattr/v0.1.0
-pychattr/halo_effect
+v0.1.0
+pychattr/halo_effect/

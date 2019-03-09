@@ -194,6 +194,8 @@ class HeuristicModel(HeuristicModelMixin):
         # construction
         self._get_internals(df)
 
+
+
         # attempt to convert the values to the types required for
         # modeling
         # TODO: param/input validation
@@ -214,4 +216,5 @@ class HeuristicModel(HeuristicModelMixin):
             conv_dates=self.conv_dates
         )
 
+        print("Class fit ended")
         return self
