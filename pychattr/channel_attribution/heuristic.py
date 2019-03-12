@@ -39,8 +39,40 @@ class HeuristicModel(HeuristicModelMixin):
       NOTE: The values contained within this feature must
       be numeric.
 
+    path_date_feature: string; default=None; required if
+     `time_decay=True`.
+      The name of the feature representing the dates of each event
+      within the paths.
+
+      NOTE: The format for the values in this feature are expected to
+      be constructed according to the following format:
+        for a given path (e.g. "A>>B>>C") corresponding dates might look
+        like: "2019-01-01>>>2019-02-01>>>2019-03-01" where the separator
+        is the same as that used to construct the paths.
+
+    conversion_date_feature: string; default=None; required if
+      `time_decay=True`.
+      The name of the feature representing the date of the events found
+      in `conversion_feature`.
+
+    direct_channel: string; default=None; required if
+    `exclude_direct=True`.
+      The name of the direct channel within the paths of the dataset.
+
+    exclude_direct: boolean; default=False; optional.
+      Whether to exclude the direct channel during the model fitting
+      process. If `True`, then `direct_channel` must be specified.
+
     separator: string; default=">>>"; required.
       The symbol used to separate the channels in each path.
+
+    return_summary: boolean; default=False; optional.
+      Whether the return summary statistics on the sales cycle for
+      the given dataset.
+
+      NOTE: both `path_date_feature` and `conversion_date_feature`
+      must be specified as they are used during the calculation of
+      summary statistics.
 
     first_touch: boolean; default=True.
       Whether to calculate the first-touch heuristic model.
@@ -64,6 +96,11 @@ class HeuristicModel(HeuristicModelMixin):
       be set to ensure the weights are applied correctly to the lead
       channel.
 
+    lead_channel: string; default=None; required if `w_shaped=True`
+    or `z_shaped=True`.
+      The name of the channel representing lead-creation within the
+      paths of the dataset.
+
     z_shaped: boolean; default=False.
       Whether to calculate the z-shaped heuristic model, also known as
       the full-path model. This model is typically used to measure the
@@ -73,6 +110,11 @@ class HeuristicModel(HeuristicModelMixin):
       `opportunity_channel` parameters must be set to ensure the
       weights are applied correctly to the lead and opportunity
       channels.
+
+    opportunity_channel: string; default=None; required if
+      `z_shaped=True`.
+      The name of the channel representing the touch point directly
+      before opportunity-creation within the paths of the dataset.
 
     time_decay: boolean; default=False.
       Whether to calculate the time-decay heuristic model. This model
@@ -88,29 +130,6 @@ class HeuristicModel(HeuristicModelMixin):
       `opportunity_stage` parameters will be checked and applied if
       found.
 
-    ensemble_results: boolean; default=True.
-      Whether to create an ensemble of the resulting models.
-
-      NOTE: Will be implemented in the next minor release.
-
-    exclude_direct: boolean; default=False; optional.
-      Whether to exclude the direct channel during the model fitting
-      process. If `True`, then `direct_channel` must be specified.
-
-    direct_channel: string; default=None; required if
-    `exclude_direct=True`.
-      The name of the direct channel within the paths of the dataset.
-
-    lead_channel: string; default=None; required if `w_shaped=True`
-    or `z_shaped=True`.
-      The name of the channel representing lead-creation within the
-      paths of the dataset.
-
-    opportunity_channel: string; default=None; required if
-      `z_shaped=True`.
-      The name of the channel representing the touch point directly
-      before opportunity-creation within the paths of the dataset.
-
     time_decay_days: int; default=7; ignored if `time_decay=False`.
       The number of days to use in calculating the weights for each
       channel in the time decay model. The smaller the number,
@@ -119,21 +138,8 @@ class HeuristicModel(HeuristicModelMixin):
       days, an interaction that occurred 7 days prior to the
       conversion would receive 50% of the credit for the conversion.
 
-    path_dates_feature: string; default=None; required if
-     `time_decay=True`.
-      The name of the feature representing the dates of each event
-      within the paths.
-
-      NOTE: The format for the values in this feature are expected to
-      be constructed according to the following format:
-        for a given path (e.g. "A>>B>>C") corresponding dates might look
-        like: "2019-01-01>>>2019-02-01>>>2019-03-01" where the separator
-        is the same as that used to construct the paths.
-
-    conversion_dates_feature: string; default=None; required if
-      `time_decay=True`.
-      The name of the feature representing the date of the events found
-      in `conversion_feature`.
+    ensemble_results: boolean; default=True.
+      Whether to create an ensemble of the resulting models.
 
     Attributes
     ----------
@@ -161,20 +167,20 @@ class HeuristicModel(HeuristicModelMixin):
     """
     def __init__(self, path_feature, conversion_feature,
                  revenue_feature=None, cost_feature=None,
-                 path_dates_feature=None, conversion_dates_feature=None,
+                 path_date_feature=None, conversion_date_feature=None,
                  direct_channel=None, exclude_direct=False,
                  separator=">>>", return_summary=False,
-                 lead_channel=None, opportunity_channel=None,
                  first_touch=True, last_touch=True,
                  linear_touch=True, u_shaped=False, w_shaped=False,
-                 z_shaped=False, time_decay=False,
-                 ensemble_results=True,  time_decay_days=7):
+                 lead_channel=None, z_shaped=False,
+                 opportunity_channel=None, time_decay=False,
+                 time_decay_days=7, ensemble_results=True):
 
         super().__init__(path_feature, conversion_feature,
                          revenue_feature=revenue_feature,
                          cost_feature=cost_feature,
-                         path_dates_feature=path_dates_feature,
-                         conversion_dates_feature=conversion_dates_feature,
+                         path_date_feature=path_date_feature,
+                         conversion_date_feature=conversion_date_feature,
                          direct_channel=direct_channel,
                          exclude_direct=exclude_direct,
                          separator=separator,
