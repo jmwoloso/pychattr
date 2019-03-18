@@ -50,6 +50,16 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
         # used in various places by both models
         self._has_rev = True if self.revenues else False
         self._has_cost = True if self.costs else False
+        # TODO: incorporate into heuristic models
+        # used by markov
+        self._has_nulls = \
+            True if self._df.loc[:, self.conversions].sum() == \
+            self._df.shape[0] else False
+        if self._has_nulls:
+            # calculate the conversion rate of the graph
+            self.graph_conv_rate = \
+                self._df.loc[:, self.conversions].sum() / \
+                self._df.shape[0]
 
         # if direct channels should be excluded, let's remove them now
         if self.exclude_direct:
@@ -85,7 +95,8 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
     def _get_sales_summary(self):
         """Returns summary statistics about the sales cycle."""
         pass
-
+    # TODO: DO NOT AGGREGATE PATHS IN THE MARKOV CASE as this will
+    #  effect the attribution provided by the algorithm
     def _aggregate_paths(self, df):
         """Aggregate the unique paths."""
         aggs = {
