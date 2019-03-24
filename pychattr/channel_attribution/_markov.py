@@ -11,34 +11,6 @@ import numpy as np
 import pandas as pd
 
 
-def go_to_conv(c, nchannels_sim, nconv, flg_var_value=None, iu=None,
-               nuf=None, fV=None, vunif=None, c_last=None, ssval=None,
-               sval0=None):
-    nconv = nconv + 1
-
-    if flg_var_value:
-        if iu > nuf:
-            vunif = np.random.uniform(size=nuf)
-            iu = 0
-        sval0 = v_vui.append(
-            fV.sim(c_last, vunif[iu]))
-        iu += 1
-    ssval = ssval + sval0
-    # print(f"ssval: {ssval}")
-
-    for k in range(nchannels):
-        if C[k] == 1:
-            T[k] = T[k] + 1
-            if flg_var_value:
-                V[k] = V[k] + sval0
-
-
-def go_to_null():
-    pass
-
-
-
-
 class Fx(object):
     """Transition Matrix."""
     def __init__(self, ncols, nrows):
@@ -267,24 +239,42 @@ nchannels += 1
 
 vchannels_sim = []
 
+
+
+##### BEGIN PROGRAM ####################################################
+########################################################################
+########################################################################
 # z = 0
 # while z < order:
 for z in range(order):
+    # TODO: PASSED
     # print(f"z: {z}")
     vchannels_sim_id[z] = -1
+    # print(f"vchannels_sim_id: ")
+    # for i, c in enumerate(vchannels_sim_id):
+        # print(f"vchannels_sim_id[{i}]: {vchannels_sim_id[i]}")
     # z = z + 1
 
 if order > 1:
+    # TODO: PASSED
     mp_channels_sim["(start)"] = nchannels_sim
     vchannels_sim.append("(start)")
     vchannels_sim_id[0] = nchannels_sim
+    # print(f"vchannels_sim_id: ")
+    # for i, c in enumerate(vchannels_sim_id):
+    #     print(f"vchannels_sim_id[{i}]: {c}")
     # print(f"nchannels_sim: {nchannels_sim}")
+    # TODO: NOT PASSED
     mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
     # print(f"vchannels_sim_id: {vchannels_sim_id}")
     # print(f"mp_channels_sim_id: {mp_channels_sim_id}")
     # print(f"vchannels_sim_id[0]: {vchannels_sim_id[0]}")
+    # TODO: PASSED
+    # print(f"nchannels_sim: {nchannels_sim}")
     nchannels_sim += 1
+    # print(f"nchannels_sim*: {nchannels_sim}")
 # print(f"mp_channels_sim_id: {mp_channels_sim_id}")
+# TODO: NOT PASSED
 if flg_var_value:
     i = 0
     while i < lvy:
@@ -310,17 +300,21 @@ while i < lvy:
     rchannels = []
     #
     while j < ssize:
+        # TODO: PASSED
         # print(f"(ssize) j:{j}")
         cfirst = 1
         # print(f"cfirst: {cfirst}")
         # print(f"j: {j}")
         while s[j] != sep[0]:
+            # TODO: PASSED
             # print(f"s[j]: {s[j]}")
             if cfirst == 0:
+                # TODO: PASSED
                 # print(f"cfirst: {cfirst}")
                 if s[j] != " ":
                     end_pos = j
             elif cfirst == 1 and s[j] != " ":
+                #TODO: PASSED
                 # print(f"cfirst: {cfirst}")
                 cfirst = 0
                 start_pos = j
@@ -328,6 +322,7 @@ while i < lvy:
             j = j + 1
 
         if cfirst == 0:
+            # TODO: PASSED
             # print(f"cfirst: {cfirst}")
             channel = s[start_pos]
             # print(f"channel: {channel}")
@@ -335,7 +330,8 @@ while i < lvy:
             # print(channel)
 
             if channel not in mp_channels.keys():
-                # print(f"channel: {channel}")
+                # TODO: PASSED
+                print(f"channel: {channel}")
                 mp_channels[channel] = nchannels
                 vchannels.append(channel)
                 nchannels = nchannels + 1
