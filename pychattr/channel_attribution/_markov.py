@@ -208,7 +208,6 @@ if flg_var_null:
 
 # how many paths do we have?
 lvy = len(vy)
-# print(lvy)
 l_vui = 0
 mp_vui = collections.defaultdict(int)
 v_vui = []
@@ -217,14 +216,12 @@ rchannels = []
 lrchannels = j0 = z = 0
 channel_j = ""
 
-# vchannels_sim_id = [i for i in range(order)]
 vchannels_sim_id = [0] * order
 mp_channels_sim_id = {}
 
 nchannels = 0
 nchannels_sim = 0
 
-# vy2 = [i for i in range(lvy)]
 vy2 = []
 
 mp_channels = collections.defaultdict(int)
@@ -249,29 +246,31 @@ for z in range(order):
     vchannels_sim_id[z] = -1
 
 
-# if order > 1:
-#     # TODO: PASSED
-#     mp_channels_sim["(start)"] = nchannels_sim
-#     vchannels_sim.append("(start)")
-#     vchannels_sim_id[0] = nchannels_sim
-#     # print(f"vchannels_sim_id: ")
-#     # for i, c in enumerate(vchannels_sim_id):
-#     #     print(f"vchannels_sim_id[{i}]: {c}")
-#     # print(f"nchannels_sim: {nchannels_sim}")
-#     # TODO: PASSED
-#     mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
-#     # print(vchannels_sim_id)
-#     # print(mp_channels_sim_id)
-#     # print(f"vchannels_sim_id: {vchannels_sim_id}")
-#     # print(f"mp_channels_sim_id: {mp_channels_sim_id}")
-#     # print(f"vchannels_sim_id[0]: {vchannels_sim_id[0]}")
-#     # TODO: PASSED
-#     # print(f"nchannels_sim: {nchannels_sim}")
-#     nchannels_sim += 1
-#     # print()
-#     # print(f"nchannels_sim: {nchannels_sim}")
-# print(f"mp_channels_sim_id: {mp_channels_sim_id}")
-# TODO: NOT PASSED
+if order > 1:
+    # TODO: PASSED
+    mp_channels_sim["(start)"] = nchannels_sim
+    vchannels_sim.append("(start)")
+    vchannels_sim_id[0] = nchannels_sim
+    # print(f"vchannels_sim_id: ")
+    # for i, c in enumerate(vchannels_sim_id):
+    #     print(f"vchannels_sim_id[{i}]: {c}")
+    # print(f"nchannels_sim: {nchannels_sim}")
+    # TODO: PASSED
+    mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
+    # print(vchannels_sim_id)
+    # print(mp_channels_sim_id)
+    # print(f"vchannels_sim_id: {vchannels_sim_id}")
+    # print(f"mp_channels_sim_id: {mp_channels_sim_id}")
+    # print(f"vchannels_sim_id[0]: {vchannels_sim_id[0]}")
+    # TODO: PASSED
+    # print(f"nchannels_sim: {nchannels_sim}")
+    nchannels_sim += 1
+    # print()
+    # print(f"nchannels_sim: {nchannels_sim}")
+print(f"mp_channels_sim_id: {mp_channels_sim_id}")
+
+
+# # TODO: NOT PASSED
 # if flg_var_value:
 #     i = 0
 #     while i < lvy:
