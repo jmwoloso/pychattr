@@ -289,67 +289,53 @@ for i in range(lvy):
     rchannels = []
 
     while j < ssize:
-    # for j in range(ssize):
-        # TODO: PASSED
-        # print(f"(ssize) j:{j}")
         cfirst = 1
-    #     # print(f"cfirst: {cfirst}")
-    #     # print(f"j: {j}")
         while s[j] != sep[0]:
-            # TODO: PASSED
-            # print(f"s[j]: {s[j]}")
             if cfirst == 0:
-                # TODO: PASSED
-                # print(f"cfirst: {cfirst}")
                 if s[j] != " ":
                     end_pos = j
             elif cfirst == 1 and s[j] != " ":
-                #TODO: PASSED
-                # print(f"cfirst: {cfirst}")
                 cfirst = 0
                 start_pos = j
                 end_pos = j
             j += 1
-            print(f"inner j: {j}")
-    #
-    #     if cfirst == 0:
-    #         # TODO: PASSED
-    #         # print(f"cfirst: {cfirst}")
-    #         # print(s)
-    #         # print(start_pos)
-    #         # print(end_pos)
-    #         channel = s[start_pos]
-    #         # channel = s[start_pos]
-    #         # print(f"channel: {channel}")
-    #         # channel = s[start_pos: (end_pos - start_pos + 1)]
-    #         # print(channel)
-    #
-    #         if channel not in mp_channels.keys():
-    #             # TODO: PASSED
-    #             # print(f"channel: {channel}")
-    #             mp_channels[channel] = nchannels
-    #             vchannels.append(channel)
-    #             nchannels = nchannels + 1
-    #
-    #         if order == 1:
-    #             # print(f"order: {order}")
-    #             if npassi == 0:
-    #                 # print(f"npassi: {npassi}")
-    #                 path = "0 "
-    #             else:
-    #                 # print(f"npassi: {npassi}")
-    #                 path += " "
-    #             # path = " " + str(mp_channels[channel])
-    #             path = path + str(mp_channels[channel])
-    #             npassi = npassi + 1
-    #             # print(f"path: {path}")
-    #         else:
-    #             # TODO: PASSED
-    #             # print(f"rchannels.append(): {channel}")
-    #             rchannels.append(channel)
+
+        if cfirst == 0:
+            channel = s[start_pos]
+
+            if channel not in mp_channels.keys():
+                # TODO: PASSED
+                # print(f"channel: {channel}")
+                mp_channels[channel] = nchannels
+                vchannels.append(channel)
+                nchannels += 1
+
+            if order == 1:
+                print(f"order: {order}")
+                if npassi == 0:
+                    print(f"npassi: {npassi}")
+                    path = "0 "
+                else:
+                    print(f"npassi: {npassi}")
+                    path += " "
+                # path = " " + str(mp_channels[channel])
+                path = path + str(mp_channels[channel])
+                print(f"path: {path}")
+                npassi += 1
+                print(f"npassi: {npassi}")
+                print()
+                # print(f"path: {path}")
+            else:
+                # TODO: PASSED
+                # print(f"rchannels.append(): {channel}")
+                rchannels.append(channel)
+                print(f"rchannels:")
+                for v in rchannels:
+                    print(v)
+                print()
+
         channel = ""
         j += 1
-        print(f"outer j: {j}")
     #     # continue
 
     # if order > 1:
