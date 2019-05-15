@@ -175,8 +175,16 @@ conv = [
     1,
     1
 ]
-var_value = []
-var_null = []
+var_value = [
+    1,
+    1,
+    1
+]
+var_null = [
+    1,
+    1,
+    1
+]
 nsim = 1
 max_step = 1
 out_more = True
@@ -245,42 +253,27 @@ for z in range(order):
     # TODO: PASSED
     vchannels_sim_id[z] = -1
 
-
 if order > 1:
     # TODO: PASSED
     mp_channels_sim["(start)"] = nchannels_sim
     vchannels_sim.append("(start)")
     vchannels_sim_id[0] = nchannels_sim
-    # print(f"vchannels_sim_id: ")
-    # for i, c in enumerate(vchannels_sim_id):
-    #     print(f"vchannels_sim_id[{i}]: {c}")
-    # print(f"nchannels_sim: {nchannels_sim}")
     # TODO: PASSED
     mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
-    # print(vchannels_sim_id)
-    # print(mp_channels_sim_id)
-    # print(f"vchannels_sim_id: {vchannels_sim_id}")
-    # print(f"mp_channels_sim_id: {mp_channels_sim_id}")
-    # print(f"vchannels_sim_id[0]: {vchannels_sim_id[0]}")
     # TODO: PASSED
-    # print(f"nchannels_sim: {nchannels_sim}")
     nchannels_sim += 1
-    # print()
-    # print(f"nchannels_sim: {nchannels_sim}")
-print(f"mp_channels_sim_id: {mp_channels_sim_id}")
 
-
-# # TODO: NOT PASSED
-# if flg_var_value:
-#     i = 0
-#     while i < lvy:
-#         if vc[i] > 0:
-#             vui = vv[i] / vc[i]
-#             if mp_vui[vui] not in list(mp_vui.keys()):
-#                 mp_vui[vui] = l_vui
-#                 v_vui.append(vui)
-#                 l_vui += 1
-#         i = i + 1
+# TODO: NOT PASSED
+if flg_var_value:
+    i = 0
+    for i in range(lvy):
+        if vc[i] > 0:
+            vui = vv[i] / vc[i]
+            if vui not in list(mp_vui.keys()):
+                mp_vui[vui] = l_vui
+                v_vui.append(vui)
+                l_vui += 1
+        i = i + 1
 
 # i = 0
 # # while i < lvy:
@@ -464,10 +457,10 @@ print(f"mp_channels_sim_id: {mp_channels_sim_id}")
     #     path += " "
     #     # print(f"path: {path}")
 
-    # print(path)
-    vy2.append(path + "e")
-    # print(vy2)
-    npassi += 1
+    # # print(path)
+    # vy2.append(path + "e")
+    # # print(vy2)
+    # npassi += 1
     # i = i + 1
     # TODO: PASSED
     # print(f"INCREMENTING i")
