@@ -311,40 +311,26 @@ for i in range(lvy):
                 nchannels += 1
 
             if order == 1:
-                print(f"order: {order}")
                 if npassi == 0:
-                    print(f"npassi: {npassi}")
                     path = "0 "
                 else:
-                    print(f"npassi: {npassi}")
                     path += " "
                 # path = " " + str(mp_channels[channel])
                 path = path + str(mp_channels[channel])
-                print(f"path: {path}")
                 npassi += 1
-                print(f"npassi: {npassi}")
-                print()
-                # print(f"path: {path}")
             else:
-                # TODO: PASSED
-                # print(f"rchannels.append(): {channel}")
                 rchannels.append(channel)
-                print(f"rchannels:")
-                for v in rchannels:
-                    print(v)
-                print()
-
         channel = ""
         j += 1
     #     # continue
 
-    # if order > 1:
-    #     # print(f"order: {order}")
-    #     lrchannels = len(rchannels)
-    #     # print(f"lrchannels: {lrchannels}")
-    #     for z in range(order):
-    #         # print(f"z: {z}")
-    #         vchannels_sim_id[z] = -1
+    if order > 1:
+        print(f"order: {order}")
+        lrchannels = len(rchannels)
+        print(f"lrchannels: {lrchannels}")
+        for z in range(order):
+            print(f"z: {z}")
+            vchannels_sim_id[z] = -1
     #
     #     if lrchannels > (order - 1):
     #         # print(f"lrchannels: {lrchannels}")
