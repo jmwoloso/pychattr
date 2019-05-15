@@ -275,42 +275,42 @@ if flg_var_value:
                 l_vui += 1
         i = i + 1
 
-# i = 0
-# # while i < lvy:
-# for i in range(i, lvy):
-#     # print(f"i: {i}")
-#     s = vy[i]
-#
-#     s += sep[0]
-#     ssize = len(s)
-#     channel = ""
-#     path = ""
-#     j = 0
-#     npassi = 0
-#     rchannels = []
-    #
-    # while j < ssize:
+# print(lvy)
+for i in range(lvy):
+    # print(f"i: {i}")
+    s = vy[i]
+
+    s += sep[0]
+    ssize = len(s)
+    channel = ""
+    path = ""
+    j = 0
+    npassi = 0
+    rchannels = []
+
+    while j < ssize:
     # for j in range(ssize):
-    #     # TODO: PASSED
-    #     # print(f"(ssize) j:{j}")
-    #     cfirst = 1
+        # TODO: PASSED
+        # print(f"(ssize) j:{j}")
+        cfirst = 1
     #     # print(f"cfirst: {cfirst}")
     #     # print(f"j: {j}")
-    #     while s[j] != sep[0]:
-    #         # TODO: PASSED
-    #         # print(f"s[j]: {s[j]}")
-    #         if cfirst == 0:
-    #             # TODO: PASSED
-    #             # print(f"cfirst: {cfirst}")
-    #             if s[j] != " ":
-    #                 end_pos = j
-    #         elif cfirst == 1 and s[j] != " ":
-    #             #TODO: PASSED
-    #             # print(f"cfirst: {cfirst}")
-    #             cfirst = 0
-    #             start_pos = j
-    #             end_pos = j
-    #         j += 1
+        while s[j] != sep[0]:
+            # TODO: PASSED
+            # print(f"s[j]: {s[j]}")
+            if cfirst == 0:
+                # TODO: PASSED
+                # print(f"cfirst: {cfirst}")
+                if s[j] != " ":
+                    end_pos = j
+            elif cfirst == 1 and s[j] != " ":
+                #TODO: PASSED
+                # print(f"cfirst: {cfirst}")
+                cfirst = 0
+                start_pos = j
+                end_pos = j
+            j += 1
+            print(f"inner j: {j}")
     #
     #     if cfirst == 0:
     #         # TODO: PASSED
@@ -347,8 +347,9 @@ if flg_var_value:
     #             # TODO: PASSED
     #             # print(f"rchannels.append(): {channel}")
     #             rchannels.append(channel)
-    #     # channel = ""
-    #     # j = j + 1
+        channel = ""
+        j += 1
+        print(f"outer j: {j}")
     #     # continue
 
     # if order > 1:
@@ -458,15 +459,8 @@ if flg_var_value:
     #     # print(f"path: {path}")
 
     # # print(path)
-    # vy2.append(path + "e")
-    # # print(vy2)
-    # npassi += 1
-    # i = i + 1
-    # TODO: PASSED
-    # print(f"INCREMENTING i")
-    # print()
-    # print()
-    # end for
+    vy2.append(path + "e")
+    npassi += 1
 
 # mp_channels["(conversion)"] = nchannels
 # nchannels += 1
