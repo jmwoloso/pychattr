@@ -259,7 +259,7 @@ if order > 1:
     vchannels_sim.append("(start)")
     vchannels_sim_id[0] = nchannels_sim
     # TODO: PASSED
-    mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
+    mp_channels_sim_id[nchannels_sim] = vchannels_sim_id.copy()
     # TODO: PASSED
     nchannels_sim += 1
 
@@ -322,79 +322,48 @@ for i in range(lvy):
                 rchannels.append(channel)
         channel = ""
         j += 1
-    #     # continue
+
 
     if order > 1:
-        print(f"order: {order}")
         lrchannels = len(rchannels)
-        print(f"lrchannels: {lrchannels}")
         for z in range(order):
-            print(f"z: {z}")
             vchannels_sim_id[z] = -1
-    #
-    #     if lrchannels > (order - 1):
-    #         # print(f"lrchannels: {lrchannels}")
-    #         npassi = lrchannels - order + 1
-    #         # print(f"npassi: {npassi}")
-    #
-    #         for k in range(npassi):
-    #             # print(f"k: {k}")
-    #             channel = ""
-    #             channel_j = ""
-    #             z = 0
-    #             j0 = k + order
-    #             j = k
-    #             # print(f"j0: {j0}")
-    #             # while j < j0:
-    #             for j in range(k,j0):
-    #                 # k = j
-    #                 # TODO: PASSED
-    #                 # print(f"z: {z}")
-    #                 # print(f"i: {i}")
-    #                 channel_j = rchannels[j]
-    #                 print(f"channel_j: {channel_j}")
-    #                 # print(f"channel: {channel}")
-    #                 channel += channel_j
-    #                 # print(f"channel: {channel}")
-    #                 vchannels_sim_id[z] = mp_channels[channel_j]
-    #                 # print(f"vchannels_sim_id[z]: {vchannels_sim_id[z]}")
-    #                 # print(f"vchannels_sim_id: ")
-    #                 # print(f"{vchannels_sim_id}")
-    #                 # for i,c in enumerate(vchannels_sim_id):
-    #                 #     print(f"vchannels_sim_id[{i}]: {c}")
-    #                 z += 1
-    #                 # print(f"III: {i}")
-    #                 # print(f"j: {j}, j0: {j0}")
-    #                 if j < (j0 - 1):
-    #                     channel += ","
-    #                     # print(f"channel*: {channel}")
-    #                 #print(f"III: {i}")
-    #             # if channel == list(mp_channels_sim.keys())[-1]:
-    #             if channel not in list(mp_channels_sim.keys()):
-    #                 # print(f"channel: {channel}")
-    #                 mp_channels_sim[channel] = nchannels_sim
-    #                 vchannels_sim.append(channel)
-    #                 # for i,c in enumerate(vchannels_sim):
-    #                 # print(f"vchannels_sim[{i}]: {c}")
-    #                 # print(f"vchannels_sim: {vchannels_sim}")
-    #                 # print(f"vchannels_sim_id: {vchannels_sim_id}")
-    #                 # print(f"adding channel to mp_channels_sim_id")
-    #                 # print(f"vchannels_sim_id: {vchannels_sim_id}")
-    #                 # TODO: PASSED
-    #                 mp_channels_sim_id[nchannels_sim] = \
-    #                     vchannels_sim_id
-    #                 for k, v in mp_channels_sim_id.items():
-    #                     print(f"{k}: {v}")
-    #                 nchannels_sim += 1
-    #                 # print(nchannels_sim)
-    #             # path += str(mp_channels_sim[channel])
-    #             path += str(mp_channels_sim[channel])
-    #             # print(f"path: {path}")
-    #             path += " "
-    #             # print(f"path*: {path}")
-    #             # print("HERE")
-    #             # end for k
-    #     else:
+
+        if lrchannels > (order - 1):
+            npassi = lrchannels - order + 1
+
+            for k in range(npassi):
+                channel = ""
+                channel_j = ""
+                z = 0
+                j0 = k + order
+
+                for j in range(k,j0):
+
+                    channel_j = rchannels[j]
+
+                    channel += channel_j
+
+                    vchannels_sim_id[z] = mp_channels[channel_j]
+
+                    z += 1
+
+                    if j < (j0 - 1):
+                        channel += ","
+
+                if channel not in list(mp_channels_sim.keys()):
+
+                    mp_channels_sim[channel] = nchannels_sim
+                    vchannels_sim.append(channel)
+
+                    mp_channels_sim_id[nchannels_sim] = \
+                        vchannels_sim_id.copy()
+                    nchannels_sim += 1
+
+                path += str(mp_channels_sim[channel])
+                path += " "
+
+        else:
     #         # print("HERE2")
     #         npassi = 1
     #         channel = ""
