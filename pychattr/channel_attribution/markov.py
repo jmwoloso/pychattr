@@ -160,6 +160,4 @@ class MarkovModel(MarkovModelMixin):
             costs=self.costs
         )
 
-
-
         return self

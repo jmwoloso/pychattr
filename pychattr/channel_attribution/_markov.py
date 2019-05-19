@@ -3,7 +3,6 @@ Contains the model-fitting logic used for the Markov model.
 """
 # Author: Jason Wolosonovich <jason@avaland.io>
 # License: BSD 3-clause
-import itertools
 import math
 import collections
 
@@ -27,22 +26,15 @@ class MarkovAttribution(object):
 
     def add(self, ichannel_old, ichannel, vxi):
         val0 = int(self.S[ichannel_old, ichannel])
-        # print(f"vxi: {vxi}")
-        # print(f"ichannel_old: {ichannel_old}")
-        # print(f"ichannel: {ichannel}")
-        # print(f"val0: {val0}")
+
         if val0 == 0:
-            # print(f"lrS0: {self.lrS0}")
             lval0 = self.lrS0[ichannel_old]
-            # print(f"lval0: {lval0}")
             self.S0[ichannel_old, lval0] = ichannel
-            # print(f"S0[ichannel_old, lval0]: {self.S0[ichannel_old, lval0]}")
             self.lrS0[ichannel_old] = lval0 + 1
-            # print(f"lrS0[ichannel_old]: {self.lrS0[ichannel_old]}")
             self.non_zeros += 1
 
         self.S[ichannel_old, ichannel] = val0 + vxi
-        # print(f"S[ichannel_old, ichannel]: {self.S[ichannel_old, ichannel]}")
+
         return self
 
     def cum(self):
@@ -105,8 +97,6 @@ class MarkovAttribution(object):
 
             vM3[k] /= vsm[w]
 
-        columns = ["channel_from", "channel_to",
-                   "transition_probability"]
         tmat_data = {
             "channel_from": vM1,
             "channel_to": vM2,
@@ -191,8 +181,6 @@ vchannels.append("(start)")
 nchannels += 1
 vchannels_sim = []
 
-
-
 ##### BEGIN PROGRAM ####################################################
 ########################################################################
 ########################################################################
@@ -206,7 +194,6 @@ if order > 1:
     mp_channels_sim_id[nchannels_sim] = vchannels_sim_id.copy()
     nchannels_sim += 1
 
-# TODO: NOT PASSED
 if flg_var_value:
     i = 0
     for i in range(lvy):
@@ -253,7 +240,7 @@ for i in range(lvy):
                     path = "0 "
                 else:
                     path += " "
-                path = path + str(mp_channels[channel].copy())
+                path = path + str(mp_channels[channel])
                 npassi += 1
             else:
                 rchannels.append(channel)
@@ -368,7 +355,6 @@ for i in range(lvy):
         vni = 0
     vpi = vci + vni
 
-    # while j < ssize:
     for j in range(ssize):
         while s[j] != " ":
             if j < ssize:
