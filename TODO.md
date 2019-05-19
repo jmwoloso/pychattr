@@ -6,5 +6,4 @@
 
 
 ## DEBUGGING (NOT PASSED)
-1. `mp_vui`
-2. `mp_channels`
+1. `mp_channels`

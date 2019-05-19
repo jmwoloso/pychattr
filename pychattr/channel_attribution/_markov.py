@@ -13,12 +13,12 @@ import pandas as pd
 
 class Fx(object):
     """Transition Matrix."""
-    def __init__(self, ncols, nrows):
+    def __init__(self, nrows, ncols):
 
         # TODO: use scipy sparse matrices
-        self.S = np.zeros((ncols, nrows), dtype=int)
-        self.S0 = np.zeros((ncols, nrows), dtype=int)
-        self.S1 = np.zeros((ncols, nrows), dtype=int)
+        self.S = np.zeros((nrows, ncols), dtype=int)
+        self.S0 = np.zeros((nrows, ncols), dtype=int)
+        self.S1 = np.zeros((nrows, ncols), dtype=int)
         self.lrS0 = np.zeros((nrows, ), dtype=int)
         self.lrS = np.zeros((nrows,), dtype=int)
         self.non_zeros = 0
@@ -28,21 +28,22 @@ class Fx(object):
 
     def add(self, ichannel_old, ichannel, vxi):
         val0 = int(self.S[ichannel_old, ichannel])
-        # print(f"vxi: {vxi}")
-        # print(f"ichannel_old: {ichannel_old}")
-        # print(f"ichannel: {ichannel}")
-        # print(f"val0: {val0}")
+        print(f"vxi: {vxi}")
+        print(f"ichannel_old: {ichannel_old}")
+        print(f"ichannel: {ichannel}")
+        print(f"val0: {val0}")
         if val0 == 0:
+            print(f"lrS0: {self.lrS0}")
             lval0 = self.lrS0[ichannel_old]
-            # print(f"lval0: {lval0}")
+            print(f"lval0: {lval0}")
             self.S0[ichannel_old, lval0] = ichannel
-            # print(f"S0[ichannel_old, lval0]: {self.S0[ichannel_old, lval0]}")
+            print(f"S0[ichannel_old, lval0]: {self.S0[ichannel_old, lval0]}")
             self.lrS0[ichannel_old] = lval0 + 1
-            # print(f"lrS0[ichannel_old]: {self.lrS0[ichannel_old]}")
+            print(f"lrS0[ichannel_old]: {self.lrS0[ichannel_old]}")
             self.non_zeros += 1
 
         self.S[ichannel_old, ichannel] = val0 + vxi
-        # print(f"S[ichannel_old, ichannel]: {self.S[ichannel_old, ichannel]}")
+        print(f"S[ichannel_old, ichannel]: {self.S[ichannel_old, ichannel]}")
         return self
 
     def cum(self):
@@ -189,7 +190,7 @@ nsim = 1
 max_step = 1
 out_more = True
 sep = ">"
-order = 2
+order = 1
 random_state=None
 
 if random_state:
@@ -313,11 +314,14 @@ for i in range(lvy):
             if order == 1:
                 if npassi == 0:
                     path = "0 "
+                    # print(f"if order==1 & npassi==0: {path}")
                 else:
                     path += " "
+                    # print(f"if order==1 & npassi!=0: {path}")
                 # path = " " + str(mp_channels[channel])
                 path = path + str(mp_channels[channel])
                 npassi += 1
+                # print(f"path to_string: {path}")
             else:
                 rchannels.append(channel)
         channel = ""
@@ -362,208 +366,219 @@ for i in range(lvy):
 
                 path += str(mp_channels_sim[channel])
                 path += " "
+                # print(f"for k in range(npassi): {path}")
 
         else:
-    #         # print("HERE2")
-    #         npassi = 1
-    #         channel = ""
-    #         channel_j = ""
-    #         for j in range(lrchannels):
-    #             # print(f"lrchannels: {lrchannels}")
-    #             channel_j = rchannels[j]
-    #             channel += channel_j
-    #             vchannels_sim_id[j] = mp_channels[channel_j]
-    #             # print(mp_channels[channel_j])
-    #             # print("HERE3")
-    #             # print(f"HERE j = {j}")
-    #             if j < (lrchannels - 1):
-    #                 # print("HERE4")
-    #                 channel += ","
-    #                 # print("HERE")
-    #
-    #         # if channel == list(mp_channels_sim.keys())[-1]:
-    #         if channel not in list(mp_channels_sim.keys()):
-    #             mp_channels_sim[channel] = nchannels_sim
-    #             vchannels_sim.append(channel)
-    #             # print(f"channel == last")
-    #             mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
-    #             print(mp_channels_sim_id)
-    #             nchannels_sim += 1
-    #         path += str(mp_channels_sim[channel])
-    #         path += " "
-    #         # end else
-    #         # i += 1
-    #         # continue
-    #     path = "0 " + path
-    # else: # end order > 1
-    #     path += " "
-    #     # print(f"path: {path}")
+            # print("HERE2")
+            npassi = 1
+            channel = ""
+            channel_j = ""
+            for j in range(lrchannels):
+                # print(f"lrchannels: {lrchannels}")
+                channel_j = rchannels[j]
+                channel += channel_j
+                vchannels_sim_id[j] = mp_channels[channel_j]
+                # print(mp_channels[channel_j])
+                # print("HERE3")
+                # print(f"HERE j = {j}")
+                if j < (lrchannels - 1):
+                    # print("HERE4")
+                    channel += ","
+                    # print("HERE")
+
+            # if channel == list(mp_channels_sim.keys())[-1]:
+            if channel not in list(mp_channels_sim.keys()):
+                mp_channels_sim[channel] = nchannels_sim
+                vchannels_sim.append(channel)
+                # print(f"channel == last")
+                mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
+                print(mp_channels_sim_id)
+                nchannels_sim += 1
+            path += str(mp_channels_sim[channel])
+            path += " "
+            # end else
+            # i += 1
+            # continue
+        path = "0 " + path
+    else: # end order > 1
+        path += " "
+        # print(f"path: {path}")
 
     # # print(path)
     vy2.append(path + "e")
     npassi += 1
 
-# mp_channels["(conversion)"] = nchannels
-# nchannels += 1
-# vchannels.append("(conversion)")
+# for v in vy2:
+#     print(v)
+mp_channels["(conversion)"] = nchannels
+nchannels += 1
+vchannels.append("(conversion)")
+
+mp_channels["(null)"] = nchannels
+nchannels += 1
+vchannels.append("(null)")
+
+if order > 1:
+    # print(f"order: {order}")
+    mp_channels_sim["(conversion)"] = nchannels_sim
+    vchannels_sim.append("(conversion)")
+    # z = 0
+    # while z < order:
+    for z in range(order):
+        # print(f"z: {z}")
+        vchannels_sim_id[0] = nchannels_sim
+        # print(f"nchannels_sim: {nchannels_sim}")
+        # z = z + 1
+    mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
+    # print(mp_channels_sim_id)
+    nchannels_sim += 1
+    # print(f"nchannels_sim*: {nchannels_sim}")
+
+    mp_channels_sim["(null)"] = nchannels_sim
+    vchannels_sim.append("(null)")
+    for z in range(order):
+        # print(f"z: {z}")
+        vchannels_sim_id[0] = nchannels_sim
+
+    mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
+    nchannels_sim += 1
+
+if order == 1:
+    nchannels_sim = nchannels
+    # print(f"nchannels_sim: {nchannels_sim}")
+
+npassi = 0
+
+S = Fx(nchannels_sim, nchannels_sim)
+fV = Fx(nchannels_sim, l_vui)
+print(f"nchannels_sim: {nchannels_sim}")
+print(f"l_vui: {l_vui}")
 #
-# mp_channels["(null)"] = nchannels
-# nchannels += 1
-# vchannels.append("(null)")
+# i = 0
+for i in range(lvy):
+    # print(i)
+    # print(i)
+    s = vy2[i]
+    print(f"s: {s}")
+    s += " "
+    print(f"s: {s}")
+    ssize = len(s)
+
+    channel = ""
+    # print(channel)
+    channel_old = ""
+    ichannel_old = 0
+    ichannel = 0
+
+    j = 0
+    npassi = 0
+
+    vci = vc[i]
+    print(f"vci: {vci}")
+
+    if flg_var_null:
+        vni = vn[i]
+    else:
+        vni = 0
+    vpi = vci + vni
+    print(f"vpi: {vpi}")
+
+    print(f"ssize: {ssize}")
+    # print(s)
+
+    while j < ssize:
+        print("while j < ssize")
+        while s[j] != " ":
+            print("while s[j] != ' ' ")
+            if j < ssize:
+                channel = s[j]
+                print(f"channel: {channel}")
+                print("inside")
+                # j = j + 1
+            print("increment j")
+            j = j + 1
+            print(f"j: {j}")
+            # break
+            continue
+        print("outside")
+        # print("about to restart")
 #
-# if order > 1:
-#     # print(f"order: {order}")
-#     mp_channels_sim["(conversion)"] = nchannels_sim
-#     vchannels_sim.append("(conversion)")
-#     # z = 0
-#     # while z < order:
-#     for z in range(order):
-#         # print(f"z: {z}")
-#         vchannels_sim_id[0] = nchannels_sim
-#         # print(f"nchannels_sim: {nchannels_sim}")
-#         # z = z + 1
-#     mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
-#     # print(mp_channels_sim_id)
-#     nchannels_sim += 1
-#     # print(f"nchannels_sim*: {nchannels_sim}")
-#
-#     mp_channels_sim["(null)"] = nchannels_sim
-#     vchannels_sim.append("(null)")
-#     for z in range(order):
-#         # print(f"z: {z}")
-#         vchannels_sim_id[0] = nchannels_sim
-#
-#     mp_channels_sim_id[nchannels_sim] = vchannels_sim_id
-#     nchannels_sim += 1
-#
-# if order == 1:
-#     nchannels_sim = nchannels
-#     # print(f"nchannels_sim: {nchannels_sim}")
-#
-# npassi = 0
-#
-# S = Fx(nchannels_sim, nchannels_sim)
-# fV = Fx(nchannels_sim, l_vui)
-# #
-# # i = 0
-# for i in range(lvy):
-#     # print(i)
-#     # print(i)
-#     s = vy2[i]
-#     # print(f"s: {s}")
-#     s += " "
-#     # print(f"s: {s}")
-#     ssize = len(s)
-#
-#     channel = ""
-#     # print(channel)
-#     channel_old = ""
-#     ichannel_old = 0
-#     ichannel = 0
-#
-#     j = 0
-#     npassi = 0
-#
-#     vci = vc[i]
-#     # print(f"vci: {vci}")
-#
-#     if flg_var_null:
-#         vni = vn[i]
-#     else:
-#         vni = 0
-#     vpi = vci + vni
-#     # print(f"vpi: {vpi}")
-#
-#     # print(ssize)
-#     # print(s)
-#
-#     while j < ssize:
-#         # print("while j < ssize")
-#         while s[j] != " ":
-#             # print("while s[j] != ' ' ")
-#             if j < ssize:
-#                 channel = s[j]
-#                 # print(f"channel: {channel}")
-#                 # print("inside")
-#                 # j = j + 1
-#             # print("increment j")
-#             j = j + 1
-#             # print(f"j: {j}")
-#             # break
-#             continue
-#         # print("outside")
-#         # print("about to restart")
-#
-#         # print(f"j: {j}")
-#         # continue
-#         j = j + 1
-#
-#         if channel != channel_old:
-#             # print("if channel.compare")
-#             if channel[0] != "0":
-#                 # print("channel[0] != '0'")
-#                 if channel[0] == "e":
-#                     # print("channel[0] == 'e'")
-#                     # print(vci)
-#                     npassi += 1
-#                     if vci > 0:
-#                         ichannel = nchannels_sim - 2
-#                         S.add(ichannel_old, ichannel, vci)
-#                         if flg_var_value:
-#                             vui = vv[i] / vci
-#                             # print(mp_vui)
-#                             fV.add(ichannel_old, mp_vui[vui], vci)
-#                         if vni > 0:
-#                             ichannel = nchannels_sim - 1
-#                             S.add(ichannel_old, ichannel, vni)
-#                             continue
-#                         else:
-#                             continue
-#                     if vni > 0:
-#                         ichannel = nchannels_sim - 1
-#                         S.add(ichannel_old, ichannel, vni)
-#                     else:
-#                         continue
-#                 else:
-#                     if vpi > 0:
-#                         ichannel = int(channel)
-#                         S.add(ichannel_old, ichannel, vpi)
-#                 npassi += 1
-#             else:
-#                 ichannel = 0
-#             channel_old = channel
-#             ichannel_old = ichannel
-#             # print(f"channel_old: {channel_old}")
-#             # print(f"ichannel_old: {ichannel_old}")
-#         # continue
-#     # print("outside")
-#
-#     # channel = ""
-#     # j = j + 1
-#     # print("about to restart")
-#     # print(f"j: {j}")
-#     # i = i + 1
-#     # print("continuing")
-#
-#
-#
-# if out_more:
-#     if order == 1:
-#         trans_mat = S.tran_matx(vchannels)
-#         # print(trans_mat)
-#     else:
-#         trans_mat = S.tran_matx(vchannels_sim)
-#
-#
-# S = S.cum()
-#
-# nuf = int(1e6)
-# nconv = 0
-# sval0 = 0
-# ssval = 0
-# c_last = 0
-# iu = 0
-# vunif = np.random.uniform(size=nuf)
+        # print(f"j: {j}")
+        # continue
+        j = j + 1
+
+        if channel != channel_old:
+            print("if channel.compare")
+            if channel[0] != "0":
+                print("channel[0] != '0'")
+                if channel[0] == "e":
+                    print("channel[0] == 'e'")
+                    # print(vci)
+                    npassi += 1
+                    if vci > 0:
+                        ichannel = nchannels_sim - 2
+                        print(f"ichannel: {ichannel}")
+                        print(f"ichannel_old: {ichannel_old}")
+                        print(f"vci: {vci}")
+                        S.add(ichannel_old, ichannel, vci)
+                        if flg_var_value:
+                            vui = vv[i] / vci
+                            for k, v in mp_vui.items():
+                                print(f"mp_vui[{k}]: {v}")
+                            print(f"flg_var_value==1 vui: {vui}")
+                            print(f"vci: {vci}")
+                            fV.add(ichannel_old, mp_vui[vui], vci)
+                        if vni > 0:
+                            ichannel = nchannels_sim - 1
+                            S.add(ichannel_old, ichannel, vni)
+                            continue
+                        else:
+                            continue
+                    if vni > 0:
+                        ichannel = nchannels_sim - 1
+                        S.add(ichannel_old, ichannel, vni)
+                    else:
+                        continue
+                else:
+                    if vpi > 0:
+                        ichannel = int(channel)
+                        S.add(ichannel_old, ichannel, vpi)
+                npassi += 1
+            else:
+                ichannel = 0
+            channel_old = channel
+            ichannel_old = ichannel
+            print(f"channel_old: {channel_old}")
+            print(f"ichannel_old: {ichannel_old}")
+        continue
+    print("outside")
+
+    channel = ""
+    j = j + 1
+    # print("about to restart")
+    # print(f"j: {j}")
+    # i = i + 1
+    # print("continuing")
+
+
+
+if out_more:
+    if order == 1:
+        trans_mat = S.tran_matx(vchannels)
+        # print(trans_mat)
+    else:
+        trans_mat = S.tran_matx(vchannels_sim)
+
+
+S = S.cum()
+
+nuf = int(1e6)
+nconv = 0
+sval0 = 0
+ssval = 0
+c_last = 0
+iu = 0
+vunif = np.random.uniform(size=nuf)
 # vunif = [
 #     0.0165923,
 #     0.289478,
@@ -571,12 +586,12 @@ for i in range(lvy):
 #     0.799922
 # ]
 #
-# # C = [0] * nchannels
-# T = [0] * nchannels
-# V = [0] * nchannels
+C = [0] * nchannels
+T = [0] * nchannels
+V = [0] * nchannels
 # C = []
-# # T = []
-# # V = []
+# T = []
+# V = []
 #
 #
 #
