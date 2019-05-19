@@ -2,8 +2,3 @@
 2. Preprocessing routines to get the data in the correct shape?
 3. Test suite
 4. packaging
-
-
-
-## DEBUGGING (NOT PASSED)
-1. `mp_channels`
