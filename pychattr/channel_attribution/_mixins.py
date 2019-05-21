@@ -126,7 +126,7 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
                  revenue_feature=None, cost_feature=None,
                  path_date_feature=None, conversion_date_feature=None,
                  direct_channel=None, exclude_direct=False,
-                 separator=">>>", return_summary=False,
+                 separator=">", return_summary=False,
                  lead_channel=None, opportunity_channel=None,
                  first_touch=True, last_touch=True,
                  linear_touch=True, u_shaped=False, w_shaped=False,
@@ -219,8 +219,8 @@ class MarkovModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
     def fit(self, df):
         super().fit(df)
 
-        # aggregate by path
-        self._aggregate_paths(self._df)
+        # # aggregate by path
+        # self._aggregate_paths(self._df)
 
         # add markers for calculating transition probabilities
         paths = self._df.loc[:, self.paths].values

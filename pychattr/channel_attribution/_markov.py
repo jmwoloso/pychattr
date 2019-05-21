@@ -104,17 +104,21 @@ class _MarkovAttribution(object):
         return pd.DataFrame(tmat_data)
 
 
-def fit_markov(df, paths, conversions, revenues, nulls, separator,
+def fit_markov(df, paths, conversions, nulls, revenues, separator,
                markov_order, n_sim, max_steps, random_state,
                return_transition_probs):
     """Markov model wrapper."""
     var_path = df.loc[:, paths].values.tolist()
     conv = df.loc[:, conversions].values.tolist()
+    flg_var_value = False
+    flg_var_null = False
     if revenues:
         var_value = df.loc[:, revenues].values.tolist()
+        flg_var_value = True
 
     if nulls:
         var_null = df.loc[:, nulls].values.tolist()
+        flg_var_null = True
 
     nsim = n_sim
     max_step = max_steps
@@ -124,12 +128,6 @@ def fit_markov(df, paths, conversions, revenues, nulls, separator,
 
     if random_state:
         np.random.seed(random_state)
-
-    # do we have revenues?
-    flg_var_value = True if len(var_value) > 0 else False
-
-    # do we have nulls?
-    flg_var_null = True if len(var_null) > 0 else False
 
     vc = conv
     vy = var_path

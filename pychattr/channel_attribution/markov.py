@@ -143,10 +143,21 @@ class MarkovModel(MarkovModelMixin):
         # path
         super().fit(df)
 
+        # explicitly create the nulls
+        if self._has_nulls:
+            mapping = {
+                0: 1,
+                1: 0
+            }
+            df.loc[:, "null_conversions"] = \
+                df.loc[:, self.conversions].map(mapping)
+            self.nulls = "null_conversions"
+
         self.results_ = fit_markov(
             df,
             self.paths,
             self.conversions,
+            self.nulls,
             self.revenues,
             self.sep,
             self.order,
