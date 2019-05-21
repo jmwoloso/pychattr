@@ -1,3 +1,4 @@
+# cython: language_level=3
 """
 Contains the model-fitting logic used for the Markov model.
 """
@@ -5,15 +6,77 @@ Contains the model-fitting logic used for the Markov model.
 # License: BSD 3-clause
 import math
 import collections
+# from cpython cimport array
+# import array
 
+
+import pyximport
+pyximport.install()
 import numpy as np
 import pandas as pd
 
-
-class _MarkovAttribution(object):
-    """Markov Attribution Model."""
+# cdef class MarkovAttribution:
+#     cdef unsigned int nrows, ncols, non_zeros
+#
+#     def __init__(self, unsigned int nrows, unsigned int ncols):
+#         # TODO: use scipy sparse matrices?
+#         # TODO: figure out equivalent c-structures for these
+#         self.S = np.zeros((nrows, ncols), dtype=int)
+#         self.S0 = np.zeros((nrows, ncols), dtype=int)
+#         self.S1 = np.zeros((nrows, ncols), dtype=int)
+#         self.lrS0 = np.zeros((nrows,), dtype=int)
+#         self.lrS = np.zeros((nrows,), dtype=int)
+#
+#         self.non_zeros = 0
+#         self.nrows = nrows
+#         self.ncols = ncols
+#
+#     # TODO: specify return type
+#     cdef void _add(self, unsigned int ichannel_old,
+#                    unsigned int ichannel, unsigned int vxi):
+#         cdef unsigned int val0
+#
+#         val0 = self.S[ichannel_old, ichannel]
+#         if val0 == 0:
+#             cdef unsigned int lval0
+#
+#             lval0 = self.lrS0[ichannel_old]
+#             self.S0[ichannel_old, lval0] = ichannel
+#             self.lrS0[ichannel_old] = lval0 + 1
+#             self.non_zeros += 1
+#         self.S[ichannel_old, ichannel] = val0 + vxi
+#         return self
+#
+#     # TODO: specify return type
+#     cdef void _cum(self):
+#         pass
+#
+#     cdef unsigned long int _sim(unsigned long int c, double uni):
+#         pass
+#
+#     cdef double _pconv(unsigned long int ichannel, unsigned long int
+#                        nchannels):
+#         pass
+#
+#     # python wrappers
+#     def add(self, unsigned int ichannel_old, unsigned int ichannel,
+#             unsigned int vxi):
+#         return self._add(ichannel_old, ichannel, vxi)
+#
+#     def cum(self):
+#         return self._cum()
+#
+#     def sim(self, unsigned long int c, double uni):
+#         return self._sim(c, uni)
+#
+#     def pconv(self, unsigned long int ichannel, unsigned long int
+#               nchannels):
+#         return self._pconv(ichannel, nchannels)
+#
+class MarkovAttribution(object):
+    """Transition Matrix."""
     def __init__(self, nrows, ncols):
-        # TODO: use scipy sparse matrices?
+        # TODO: use scipy sparse matrices
         self.S = np.zeros((nrows, ncols), dtype=int)
         self.S0 = np.zeros((nrows, ncols), dtype=int)
         self.S1 = np.zeros((nrows, ncols), dtype=int)
@@ -25,7 +88,6 @@ class _MarkovAttribution(object):
 
     def add(self, ichannel_old, ichannel, vxi):
         val0 = int(self.S[ichannel_old, ichannel])
-
         if val0 == 0:
             lval0 = self.lrS0[ichannel_old]
             self.S0[ichannel_old, lval0] = ichannel
@@ -104,35 +166,74 @@ class _MarkovAttribution(object):
         return pd.DataFrame(tmat_data)
 
 
-def fit_markov(df, paths, conversions, revenues, nulls, separator,
-               markov_order, n_sim, max_steps, random_state,
-               return_transition_probs):
-    """Markov model wrapper."""
-    var_path = df.loc[:, paths].values.tolist()
-    conv = df.loc[:, conversions].values.tolist()
-    if revenues:
-        var_value = df.loc[:, revenues].values.tolist()
 
-    if nulls:
-        var_null = df.loc[:, nulls].values.tolist()
+def fit_markov():
+# def fit_markov(df, paths, conversions, revenues,
+#                costs, separator, markov_order, n_sim,
+#                max_steps, random_state, return_transition_probs):
+    """Fit the Markov model."""
+    cdef unsigned int nsim, max_step, order, random_state, i, ssize, \
+        l_vui, lvy, lrchannels, j0, z, nchannels, nchannels_sim, k, \
+        npassi
+    cdef bint out_more, flg_var_value, flg_var_null
+    cdef double vui
 
-    nsim = n_sim
-    max_step = max_steps
-    out_more = return_transition_probs
-    sep = separator
-    order = markov_order
+
+
+
+
+
+    var_path = [
+        # ["A", "B", "A", "B", "B", "A"],
+        # ["A", "B", "B", "A", "A"],
+        # ["A", "A"],
+        "A > B > A > B > B > A",
+        "A > B > B > A > A",
+        "A > A"
+    ]
+    conv = [
+        1,
+        1,
+        1
+    ]
+
+    var_value = [1, 1, 1]
+    var_null = [
+        1,
+        1,
+        1
+    ]
+
+
+    sep = ">"
+
+    nsim = 1000
+    max_step = 13
+    order = 1
+    random_state=26
+
+    out_more = True
 
     if random_state:
         np.random.seed(random_state)
 
     # do we have revenues?
-    flg_var_value = True if len(var_value) > 0 else False
+    if len(var_value) > 0:
+        flg_var_value = True
+    else:
+        flg_var_value = False
 
     # do we have nulls?
-    flg_var_null = True if len(var_null) > 0 else False
+    if len(var_null) > 0:
+        flg_var_null = True
+    else:
+        flg_var_null = False
 
-    vc = conv
+    # get the list of paths
     vy = var_path
+
+    # get the list of conversions
+    cdef vc = conv
 
     if flg_var_value:
         vv = var_value
@@ -141,11 +242,10 @@ def fit_markov(df, paths, conversions, revenues, nulls, separator,
         vn = var_null
 
     # how many paths do we have?
-    lvy = len(vy)
+    lvy = sizeof(vy)
     l_vui = 0
     mp_vui = collections.defaultdict(int)
     v_vui = []
-    vui = 0.0
     rchannels = []
     lrchannels = j0 = z = 0
     channel_j = ""
@@ -164,9 +264,9 @@ def fit_markov(df, paths, conversions, revenues, nulls, separator,
     nchannels += 1
     vchannels_sim = []
 
-    ##### BEGIN PROGRAM ################################################
-    ####################################################################
-    ####################################################################
+    ##### BEGIN PROGRAM ####################################################
+    ########################################################################
+    ########################################################################
     for z in range(order):
         vchannels_sim_id[z] = -1
 
@@ -178,7 +278,6 @@ def fit_markov(df, paths, conversions, revenues, nulls, separator,
         nchannels_sim += 1
 
     if flg_var_value:
-        i = 0
         for i in range(lvy):
             if vc[i] > 0:
                 vui = vv[i] / vc[i]
@@ -191,7 +290,7 @@ def fit_markov(df, paths, conversions, revenues, nulls, separator,
     for i in range(lvy):
         s = vy[i]
         s += sep[0]
-        ssize = len(s)
+        ssize = sizeof(s)
         channel = ""
         path = ""
         j = 0
@@ -316,8 +415,8 @@ def fit_markov(df, paths, conversions, revenues, nulls, separator,
 
     npassi = 0
 
-    S = _MarkovAttribution(nchannels_sim, nchannels_sim)
-    fV = _MarkovAttribution(nchannels_sim, l_vui)
+    S = MarkovAttribution(nchannels_sim, nchannels_sim)
+    fV = MarkovAttribution(nchannels_sim, l_vui)
 
     for i in range(lvy):
         s = vy2[i]
@@ -555,3 +654,6 @@ def fit_markov(df, paths, conversions, revenues, nulls, separator,
             tmat = trans_mat.copy()
 
             return df, re_df, tmat
+
+if __name__ == "__main__":
+    df, re_df, tmat = fit_markov()

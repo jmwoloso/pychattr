@@ -19,7 +19,7 @@ setup(name="pychattr",
           "numpy",
           "pandas"
       ],
-      # ext_modules=cythonize("pychattr/channel_attribution/_markov.pyx"),
+      # ext_modules=cythonize("pychattr/channel_attribution/__markov.pyx"),
       classifiers=[
           "Development Status :: 3 - Alpha",
           "Programming Language :: Python :: 3",
