@@ -3,7 +3,7 @@ try:
     from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup
-
+# from Cython.Build import cythonize
 import pychattr
 
 setup(name="pychattr",
@@ -17,10 +17,9 @@ setup(name="pychattr",
       long_description="Marketing Attribution for Python",
       install_requires=[
           "numpy",
-          "pandas",
-          "tensorflow==1.13.1",
-          "tensorflow-probability==0.6.0"
+          "pandas"
       ],
+      # ext_modules=cythonize("pychattr/channel_attribution/_markov.pyx"),
       classifiers=[
           "Development Status :: 3 - Alpha",
           "Programming Language :: Python :: 3",

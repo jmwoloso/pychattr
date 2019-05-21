@@ -263,3 +263,5 @@ dev
 r_script
 *.c
 *.html
+._markov.pyx
+shapley
