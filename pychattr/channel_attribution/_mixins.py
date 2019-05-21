@@ -220,7 +220,7 @@ class MarkovModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
         super().fit(df)
 
         # # aggregate by path
-        # self._aggregate_paths(self._df)
+        self._aggregate_paths(self._df)
 
         # add markers for calculating transition probabilities
         paths = self._df.loc[:, self.paths].values
