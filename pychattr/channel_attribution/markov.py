@@ -155,9 +155,14 @@ class MarkovModel(MarkovModelMixin):
             df,
             self.paths,
             self.conversions,
-            sep=self.sep,
-            revenues=self.revenues,
-            costs=self.costs
+            self.revenues,
+            self.costs,
+            self.sep,
+            self.order,
+            self.n_sim,
+            self.max_step,
+            self.random_state,
+            self.trans_probs
         )
 
         return self
