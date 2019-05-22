@@ -157,6 +157,7 @@ class MarkovModel(MarkovModelMixin):
             df,
             self.paths,
             self.conversions,
+<<<<<<< HEAD
             self.nulls,
             self.revenues,
             self.sep,
@@ -165,6 +166,11 @@ class MarkovModel(MarkovModelMixin):
             self.max_step,
             self.random_state,
             self.trans_probs
+=======
+            sep=self.sep,
+            revenues=self.revenues,
+            costs=self.costs
+>>>>>>> parent of f36332c... ENH: recording changes
         )
 
         return self
