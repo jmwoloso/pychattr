@@ -104,7 +104,7 @@ class MarkovAttribution(object):
         }
         return pd.DataFrame(tmat_data)
 
-<<<<<<< HEAD
+
 
 def fit_markov(df, paths, conversions, nulls, revenues, separator,
                markov_order, n_sim, max_steps, random_state,
@@ -136,18 +136,16 @@ def fit_markov(df, paths, conversions, nulls, revenues, separator,
 
     if flg_var_value:
         vv = var_value
-=======
->>>>>>> parent of f36332c... ENH: recording changes
 
 
-<<<<<<< HEAD
+
     # how many paths do we have?
     lvy = len(vy)
     l_vui = 0
     mp_vui = collections.defaultdict(int)
     v_vui = []
     vui = 0.0
-=======
+
 var_path = [
     # ["A", "B", "A", "B", "B", "A"],
     # ["A", "B", "B", "A", "A"],
@@ -255,7 +253,7 @@ for i in range(lvy):
     path = ""
     j = 0
     npassi = 0
->>>>>>> parent of f36332c... ENH: recording changes
+
     rchannels = []
 
     while j < ssize:
@@ -611,8 +609,6 @@ for k in range(nch0 + 1):
             })
 
             tmat = trans_mat.copy()
-<<<<<<< HEAD
+
 
             return df, re_df, tmat
-=======
->>>>>>> parent of f36332c... ENH: recording changes
