@@ -32,6 +32,13 @@ class MarkovModel(MarkovModelMixin):
       NOTE: The values contained within this feature
       must be numeric.
 
+    cost_feature: string; default=None; optional.
+      The name of the feature containing the cost incurred for
+      each path.
+
+      NOTE: The values contained within this feature must
+      be numeric.
+
     path_date_feature: string; default=None; required if
      `time_decay=True`.
       The name of the feature representing the dates of each event
@@ -106,15 +113,16 @@ class MarkovModel(MarkovModelMixin):
     https://www.bizible.com/blog/multi-touch-attribution-full-debrief
     """
     def __init__(self, path_feature, conversion_feature,
-                 revenue_feature=None, path_date_feature=None,
-                 conversion_date_feature=None, direct_channel=None,
-                 exclude_direct=False, separator=">>>",
-                 return_summary=False, k_order=1,
+                 revenue_feature=None, cost_feature=None,
+                 path_date_feature=None, conversion_date_feature=None,
+                 direct_channel=None, exclude_direct=False,
+                 separator=">>>", return_summary=False, k_order=1,
                  n_simulations=10000, max_step=None,
                  return_transition_probs=True, random_state=None):
 
         super().__init__(path_feature, conversion_feature,
                          revenue_feature=revenue_feature,
+                         cost_feature=cost_feature,
                          path_date_feature=path_date_feature,
                          conversion_date_feature=conversion_date_feature,
                          direct_channel=direct_channel,
@@ -143,34 +151,15 @@ class MarkovModel(MarkovModelMixin):
         # path
         super().fit(df)
 
-        # explicitly create the nulls
-        if self._has_nulls:
-            mapping = {
-                0: 1,
-                1: 0
-            }
-            df.loc[:, "null_conversions"] = \
-                df.loc[:, self.conversions].map(mapping)
-            self.nulls = "null_conversions"
-
         self.results_ = fit_markov(
             df,
             self.paths,
             self.conversions,
-<<<<<<< HEAD
-            self.nulls,
-            self.revenues,
-            self.sep,
-            self.order,
-            self.n_sim,
-            self.max_step,
-            self.random_state,
-            self.trans_probs
-=======
             sep=self.sep,
             revenues=self.revenues,
             costs=self.costs
->>>>>>> parent of f36332c... ENH: recording changes
         )
+
+
 
         return self
