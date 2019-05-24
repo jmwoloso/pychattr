@@ -178,7 +178,7 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
 
         # remove whitespace around channel names
         gb.loc[:, self.paths] = gb.loc[:, self.paths].apply(
-            lambda s: s.strip()
+            lambda s: [ss.strip() for ss in s]
         )
 
         self._df = gb.copy()
