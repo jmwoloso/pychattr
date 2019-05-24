@@ -17,7 +17,7 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
                  conversion_date_feature=None, direct_channel=None,
                  exclude_direct=False, separator=">",
                  return_summary=False):
-        print("AttributionModelBase")
+
         self.paths = path_feature
         self.conversions = conversion_feature
         self.nulls = null_feature
@@ -111,7 +111,6 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
                          exclude_direct=exclude_direct,
                          separator=separator,
                          return_summary=return_summary)
-        print("HeuristicModelBase")
 
         self.lead = lead_channel
         self.oppty = opportunity_channel
