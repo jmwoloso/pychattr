@@ -22,8 +22,17 @@ class HeuristicModel(HeuristicModelMixin):
       The name of the feature indicating whether the path resulted in a
       conversion.
 
-      NOTE: The values contained within this feature must be
-      binary/boolean.
+      NOTE: When using Markov attribution, do not pre-aggregate
+      conversions by path as this will effect the outcome of the
+      simulation.
+
+    null_feature: string; default=None; optional.
+      The name of the feature indicating whether the path resulted in a
+      non-conversion.
+
+      NOTE: When using Markov attribution, do not pre-aggregate
+      non-conversions by path as this will effect the outcome of the
+      simulation.
 
     revenue_feature: string; default=None; optional.
       The name of the feature containing the revenue generated
@@ -166,17 +175,18 @@ class HeuristicModel(HeuristicModelMixin):
     https://docs.attributionapp.com/docs/time-decay-attribution-example-direct-included
     """
     def __init__(self, path_feature, conversion_feature,
-                 revenue_feature=None, cost_feature=None,
-                 path_date_feature=None, conversion_date_feature=None,
-                 direct_channel=None, exclude_direct=False,
-                 separator=">>>", return_summary=False,
-                 first_touch=True, last_touch=True,
-                 linear_touch=True, u_shaped=False, w_shaped=False,
-                 lead_channel=None, z_shaped=False,
+                 null_feature=None, revenue_feature=None,
+                 cost_feature=None, path_date_feature=None,
+                 conversion_date_feature=None, direct_channel=None,
+                 exclude_direct=False, separator=">",
+                 return_summary=False, first_touch=True,
+                 last_touch=True, linear_touch=True, u_shaped=False,
+                 w_shaped=False, lead_channel=None, z_shaped=False,
                  opportunity_channel=None, time_decay=False,
                  time_decay_days=7, ensemble_results=True):
 
         super().__init__(path_feature, conversion_feature,
+                         null_feature=null_feature,
                          revenue_feature=revenue_feature,
                          cost_feature=cost_feature,
                          path_date_feature=path_date_feature,
@@ -198,7 +208,6 @@ class HeuristicModel(HeuristicModelMixin):
     def fit(self, df):
         # derive internal attributes that will be used during model
         # construction
-
         super().fit(df)
 
         # attempt to convert the values to the types required for
@@ -206,7 +215,7 @@ class HeuristicModel(HeuristicModelMixin):
         # TODO: param/input validation
 
         # fit the specified heuristic models
-        self.results_ = fit_heuristic_models(
+        self.attribution_model_ = fit_heuristic_models(
             self._heuristics,
             self._df,
             self.paths,

@@ -25,10 +25,10 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
                     rev=False, cost=False):
         """First-touch attribution model."""
         results = []
-
-        ps = d.loc[:, path_f].apply(
-            lambda s: s.split(sp)
-        ).values
+        ps = d.loc[:, path_f].values
+        # ps = d.loc[:, path_f].apply(
+        #     lambda s: s.split(sp)
+        # ).values
 
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
@@ -60,10 +60,10 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
                    rev=False, cost=False):
         """Last-touch attribution model."""
         results = []
-
-        ps = d.loc[:, path_f].apply(
-            lambda s: s.split(sp)
-        ).values
+        ps = d.loc[:, path_f].values
+        # ps = d.loc[:, path_f].apply(
+        #     lambda s: s.split(sp)
+        # ).values
 
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
@@ -97,8 +97,8 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         """Linear touch attribution model."""
         # container to hold the resulting dataframes
         results = []
-
-        ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
+        ps = d.loc[:, path_f].values
+        # ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
@@ -131,8 +131,8 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         """U-shaped (position-based) attribution model."""
         # container to hold the resulting dataframes
         results = []
-
-        ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
+        ps = d.loc[:, path_f].values
+        # ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
@@ -194,8 +194,8 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         """W-shaped attribution model."""
         # container to hold the resulting dataframes
         results = []
-
-        ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
+        ps = d.loc[:, path_f].values
+        # ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
@@ -220,7 +220,6 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
                 # indices of the major channels
                 idx = [0, np.argmax(np.array(path) == lead_channel),
                        len(path) - 1]
-                print(idx)
 
                 # remove indices of major channels
                 ix.pop(idx[1])
@@ -266,8 +265,8 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         """Z-shaped (full path) attribution model."""
         # container to hold the resulting dataframes
         results = []
-
-        ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
+        ps = d.loc[:, path_f].values
+        # ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
@@ -351,9 +350,9 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
 
             # container to hold the resulting dataframes
             results = []
-
-            ps = d.loc[:, path_f].apply(lambda s: s.split(sp))\
-                .values
+            ps = d.loc[:, path_f].values
+            # ps = d.loc[:, path_f].apply(lambda s: s.split(sp))\
+            #     .values
             dates = d.loc[:, path_dates].apply(lambda s: s.split(
                 sp)).values
             c_dates = d.loc[:, conv_dates].values
@@ -362,9 +361,6 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
             # model
             for i, (path, date, c_date) in enumerate(zip(ps, dates,
                                                          c_dates)):
-                print(path)
-                print(date)
-                print(c_date)
                 df_ = pd.DataFrame(
                     {
                         "channel": path,
@@ -415,27 +411,23 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
     # TODO: is there a cleaner way to do this?
     # the explicitly-named models need extra parameters sent to them
     if heuristic == "w_shaped":
-        print("w_shaped")
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, lead_channel, rev_f=revenues,
                               cost_f=costs, rev=has_rev, cost=has_cost)
 
     elif heuristic == "z_shaped":
-        print("z_shaped")
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, lead_channel, oppty_channel,
                               rev_f=revenues, cost_f=costs, rev=has_rev,
                               cost=has_cost)
 
     elif heuristic == "time_decay":
-        print("time_decay")
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, path_dates, conv_dates,
                               dr=decay_rate, rev_f=revenues,
                               cost_f=costs, rev=has_rev, cost=has_cost)
 
     else:
-        print(f"{heuristic}")
         f = functools.partial(eval(heuristic), df, paths, conversions,
                               sep, rev_f=revenues, cost_f=costs,
                               rev=has_rev, cost=has_cost)
@@ -481,7 +473,6 @@ def fit_heuristic_models(heuristics, df, paths,
     """
     Unified interface for fitting the heuristic models.
     """
-    print("fit_heuristic_models() called")
     results = []
     for heuristic in heuristics:
         if heuristic != "ensemble":
@@ -501,8 +492,6 @@ def fit_heuristic_models(heuristics, df, paths,
     # combine the results
     results = [result.set_index("channel") for result in results]
     results = pd.concat(results, axis=1).reset_index(drop=False)
-
-    print(heuristics)
 
     # ensemble results
     if "ensemble" in heuristics:
