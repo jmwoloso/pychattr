@@ -17,9 +17,7 @@ setup(name="pychattr",
       long_description="Marketing Attribution for Python",
       install_requires=[
           "numpy",
-          "pandas",
-          "tensorflow==1.13.1",
-          "tensorflow-probability==0.6.0"
+          "pandas"
       ],
       classifiers=[
           "Development Status :: 3 - Alpha",
