@@ -522,21 +522,21 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
             if not out_more:
                 df = pd.DataFrame(
                     {
-                        "channel_name": vchannels0,
-                        "total_conversion": TV,
-                        "total_conversion_value": VV
+                        "channel": vchannels0,
+                        "markov_conversions": TV,
+                        "markov_revenue": VV
                     }
                 )
                 return df
             else:
                 df = pd.DataFrame({
-                    "channel_name": vchannels0,
-                    "total_conversion": TV,
-                    "total_conversion_value": VV
+                    "channel": vchannels0,
+                    "markov_conversions": TV,
+                    "markov_revenue": VV
                 })
 
                 re_df = pd.DataFrame({
-                    "channel_name": vchannels0,
+                    "channel": vchannels0,
                     "removal_effects_conversion": rTV,
                     "removal_effects_conversion_value": rVV
                 })
