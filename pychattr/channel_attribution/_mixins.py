@@ -12,13 +12,15 @@ import numpy as np
 
 class AttributionModelBase(metaclass=abc.ABCMeta):
     def __init__(self, path_feature, conversion_feature,
-                 revenue_feature=None, cost_feature=None,
-                 path_date_feature=None, conversion_date_feature=None,
-                 direct_channel=None, exclude_direct=False,
-                 separator=">>>", return_summary=False):
-
+                 null_feature=None, revenue_feature=None,
+                 cost_feature=None, path_date_feature=None,
+                 conversion_date_feature=None, direct_channel=None,
+                 exclude_direct=False, separator=">",
+                 return_summary=False):
+        print("AttributionModelBase")
         self.paths = path_feature
         self.conversions = conversion_feature
+        self.nulls = null_feature
         self.revenues = revenue_feature
         self.costs = cost_feature
         self.path_dates = path_date_feature
@@ -28,7 +30,6 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
         self.sep = separator
         self.summary = return_summary
 
-    @abc.abstractmethod
     def fit(self, df):
         """
         Fit the specified model.
@@ -50,16 +51,6 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
         # used in various places by both models
         self._has_rev = True if self.revenues else False
         self._has_cost = True if self.costs else False
-        # TODO: incorporate into heuristic models
-        # used by markov
-        self._has_nulls = \
-            True if self._df.loc[:, self.conversions].sum() == \
-            self._df.shape[0] else False
-        if self._has_nulls:
-            # calculate the conversion rate of the graph
-            self.graph_conv_rate = \
-                self._df.loc[:, self.conversions].sum() / \
-                self._df.shape[0]
 
         # if direct channels should be excluded, let's remove them now
         if self.exclude_direct:
@@ -94,46 +85,24 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
 
     def _get_sales_summary(self):
         """Returns summary statistics about the sales cycle."""
-        pass
-    # TODO: DO NOT AGGREGATE PATHS IN THE MARKOV CASE as this will
-    #  effect the attribution provided by the algorithm
-    def _aggregate_paths(self, df):
-        """Aggregate the unique paths."""
-        aggs = {
-            self.conversions: "sum"
-        }
-
-        if self._has_rev:
-            aggs[self.revenues] = "sum"
-        if self._has_cost:
-            aggs[self.costs] = "sum"
-
-        # aggregate the values by path
-        gb = df.groupby([self.paths], as_index=False).agg(aggs)
-
-        # split the paths into lists of channels
-        gb.loc[:, self.paths] = gb.loc[:, self.paths].apply(
-            lambda s: s.split(self.sep)
-        )
-
-        self._df = gb.copy()
-
-        return self
+        raise NotImplementedError("This feature will be available in "
+                                  "a future release of pychattr.")
 
 
 class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
     def __init__(self, path_feature, conversion_feature,
-                 revenue_feature=None, cost_feature=None,
-                 path_date_feature=None, conversion_date_feature=None,
-                 direct_channel=None, exclude_direct=False,
-                 separator=">>>", return_summary=False,
-                 lead_channel=None, opportunity_channel=None,
-                 first_touch=True, last_touch=True,
-                 linear_touch=True, u_shaped=False, w_shaped=False,
-                 z_shaped=False, time_decay=False,
+                 null_feature=None, revenue_feature=None,
+                 cost_feature=None, path_date_feature=None,
+                 conversion_date_feature=None, direct_channel=None,
+                 exclude_direct=False, separator=">",
+                 return_summary=False, lead_channel=None,
+                 opportunity_channel=None, first_touch=True,
+                 last_touch=True, linear_touch=True, u_shaped=False,
+                 w_shaped=False, z_shaped=False, time_decay=False,
                  ensemble_results=True,  time_decay_days=7):
 
         super().__init__(path_feature, conversion_feature,
+                         null_feature=null_feature,
                          revenue_feature=revenue_feature,
                          cost_feature=cost_feature,
                          path_date_feature=path_date_feature,
@@ -142,6 +111,7 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
                          exclude_direct=exclude_direct,
                          separator=separator,
                          return_summary=return_summary)
+        print("HeuristicModelBase")
 
         self.lead = lead_channel
         self.oppty = opportunity_channel
@@ -155,7 +125,6 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
         self.ensemble = ensemble_results
         self.decay_rate = time_decay_days
 
-    @abc.abstractmethod
     def fit(self, df):
         super().fit(df)
 
@@ -188,6 +157,34 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
 
         return self
 
+    def _aggregate_paths(self, df):
+        """Aggregate the unique paths."""
+        aggs = {
+            self.conversions: "sum"
+        }
+
+        if self._has_rev:
+            aggs[self.revenues] = "sum"
+        if self._has_cost:
+            aggs[self.costs] = "sum"
+
+        # aggregate the values by path
+        gb = df.groupby([self.paths], as_index=False).agg(aggs)
+
+        # split the paths into lists of channels
+        gb.loc[:, self.paths] = gb.loc[:, self.paths].apply(
+            lambda s: s.split(self.sep)
+        )
+
+        # remove whitespace around channel names
+        gb.loc[:, self.paths] = gb.loc[:, self.paths].apply(
+            lambda s: s.strip()
+        )
+
+        self._df = gb.copy()
+
+        return self
+
     def _get_heuristics(self):
         """Get the heuristic models to build."""
         heuristics = []
@@ -215,23 +212,54 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
 
 
 class MarkovModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
-    @abc.abstractmethod
+    def __init__(self, path_feature, conversion_feature,
+                 null_feature=None, revenue_feature=None,
+                 cost_feature=None, path_date_feature=None,
+                 conversion_date_feature=None, direct_channel=None,
+                 exclude_direct=False, separator=">",
+                 return_summary=False, k_order=1, n_simulations=10000,
+                 max_steps=None, return_transition_probs=True,
+                 random_state=None):
+
+        super().__init__(path_feature, conversion_feature,
+                         null_feature=null_feature,
+                         revenue_feature=revenue_feature,
+                         cost_feature=cost_feature,
+                         path_date_feature=path_date_feature,
+                         conversion_date_feature=conversion_date_feature,
+                         direct_channel=direct_channel,
+                         exclude_direct=exclude_direct,
+                         separator=separator,
+                         return_summary=return_summary)
+
+        self.order = k_order
+        self.n_sim = n_simulations
+        self.max_steps = max_steps
+        self.trans_probs = return_transition_probs
+        self.random_state = random_state
+
     def fit(self, df):
         super().fit(df)
 
-        # aggregate by path
-        self._aggregate_paths(self._df)
+        # self._has_nulls = \
+        #     True if self._df.loc[:, self.conversions].sum() != \
+        #             self._df.shape[0] else False
+        # if self._has_nulls:
+            # calculate the conversion rate of the graph
+            # self.graph_conv_rate = \
+            #     self._df.loc[:, self.conversions].sum() / \
+            #     self._df.shape[0]
 
-        # add markers for calculating transition probabilities
-        paths = self._df.loc[:, self.paths].values
-        paths_ = []
-
-        for path in paths:
-            start = ["START"]
-            path.append("CONVERSION")
-            path_ = start + path
-            paths_.append(path_)
-
-        self._df.loc[:, self.paths] = paths_
+        # # add markers for calculating transition probabilities
+        # paths = self._df.loc[:, self.paths].values
+        # paths_ = []
+        #
+        # for path in paths:
+        #     start = ["START"]
+        #     path.append("CONVERSION")
+        #     path_ = start + path
+        #     paths_.append(path_)
+        #
+        # self._df.loc[:, self.paths] = paths_
 
         return self
