@@ -22,8 +22,17 @@ class MarkovModel(MarkovModelMixin):
       The name of the feature indicating whether the path resulted in a
       conversion.
 
-      NOTE: The values contained within this feature must be
-      binary/boolean.
+      NOTE: When using Markov attribution, do not pre-aggregate
+      conversions by path as this will effect the outcome of the
+      simulation.
+
+    null_feature: string; default=None; optional.
+      The name of the feature indicating whether the path resulted in a
+      non-conversion.
+
+      NOTE: When using Markov attribution, do not pre-aggregate
+      non-conversions by path as this will effect the outcome of the
+      simulation.
 
     revenue_feature: string; default=None; optional.
       The name of the feature containing the revenue generated
@@ -80,7 +89,7 @@ class MarkovModel(MarkovModelMixin):
     n_simulations : one of {int, None}; default=10000.
       total simulations from the transition matrix.
 
-    max_step : one of {int, None}; default=None.
+    max_steps : one of {int, None}; default=None.
       the maximum number of steps for a single simulated path.
 
     return_transition_probs : bool; required; default=True.
@@ -113,14 +122,16 @@ class MarkovModel(MarkovModelMixin):
     https://www.bizible.com/blog/multi-touch-attribution-full-debrief
     """
     def __init__(self, path_feature, conversion_feature,
-                 revenue_feature=None, cost_feature=None,
-                 path_date_feature=None, conversion_date_feature=None,
-                 direct_channel=None, exclude_direct=False,
-                 separator=">>>", return_summary=False, k_order=1,
-                 n_simulations=10000, max_step=None,
+                 null_feature=None, revenue_feature=None,
+                 cost_feature=None, path_date_feature=None,
+                 conversion_date_feature=None, direct_channel=None,
+                 exclude_direct=False, separator=">",
+                 return_summary=False, k_order=1,
+                 n_simulations=10000, max_steps=None,
                  return_transition_probs=True, random_state=None):
 
         super().__init__(path_feature, conversion_feature,
+                         null_feature=null_feature,
                          revenue_feature=revenue_feature,
                          cost_feature=cost_feature,
                          path_date_feature=path_date_feature,
@@ -128,12 +139,11 @@ class MarkovModel(MarkovModelMixin):
                          direct_channel=direct_channel,
                          exclude_direct=exclude_direct,
                          separator=separator,
-                         return_summary=return_summary)
-        self.order = k_order
-        self.n_sim = n_simulations
-        self.max_step = max_step
-        self.trans_probs = return_transition_probs
-        self.random_state = random_state
+                         return_summary=return_summary,
+                         k_order=k_order, n_simulations=n_simulations,
+                         max_steps=max_steps,
+                         return_transition_probs=return_transition_probs,
+                         random_state=random_state)
 
     def fit(self, df):
         """
@@ -151,15 +161,22 @@ class MarkovModel(MarkovModelMixin):
         # path
         super().fit(df)
 
-        self.results_ = fit_markov(
+        df, re_df, tmat = fit_markov(
             df,
             self.paths,
             self.conversions,
-            sep=self.sep,
-            revenues=self.revenues,
-            costs=self.costs
+            self.revenues,
+            self.nulls,
+            self.n_sim,
+            self.max_steps,
+            self.trans_probs,
+            self.sep,
+            self.order,
+            self.random_state
         )
 
-
+        self.attribution_model_ = df
+        self.removal_effects_ = re_df
+        self.transition_matrix_ = tmat
 
         return self
