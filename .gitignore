@@ -262,3 +262,6 @@ pychattr/halo_effect/
 dev
 r_script
 *.pyx
+
+pychattr/shapley
+pychattr/utils
