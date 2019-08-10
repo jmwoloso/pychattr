@@ -1,8 +1,9 @@
 """
 Contains the model-fitting logic used for the Markov model.
 """
-# Author: Jason Wolosonovich <jason@avaland.io>
+# Author: Jason Wolosonovich <jason@refinerynet.com>
 # License: BSD 3-clause
+
 import math
 import collections
 
@@ -12,13 +13,14 @@ import pandas as pd
 
 class Fx(object):
     """Transition Matrix."""
+
     def __init__(self, nrows, ncols):
 
         # TODO: use scipy sparse matrices
         self.S = np.zeros((nrows, ncols), dtype=int)
         self.S0 = np.zeros((nrows, ncols), dtype=int)
         self.S1 = np.zeros((nrows, ncols), dtype=int)
-        self.lrS0 = np.zeros((nrows, ), dtype=int)
+        self.lrS0 = np.zeros((nrows,), dtype=int)
         self.lrS = np.zeros((nrows,), dtype=int)
         self.non_zeros = 0
         self.nrows = nrows
@@ -161,9 +163,8 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
 
     vchannels_sim = []
 
-
-
-    ##### BEGIN PROGRAM ####################################################
+    ##### BEGIN PROGRAM
+    # ####################################################
     ########################################################################
     ########################################################################
     for z in range(order):
@@ -244,7 +245,7 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
                     z = 0
                     j0 = k + order
 
-                    for j in range(k,j0):
+                    for j in range(k, j0):
                         channel_j = rchannels[j]
                         channel += channel_j
                         vchannels_sim_id[z] = mp_channels[channel_j]
@@ -284,7 +285,7 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
                 path += str(mp_channels_sim[channel])
                 path += " "
             path = "0 " + path
-        else: # end order > 1
+        else:  # end order > 1
             path += " "
         vy2.append(path + "e")
         npassi += 1
@@ -391,7 +392,6 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
         else:
             trans_mat = S.tran_matx(vchannels_sim)
 
-
     S = S.cum()
 
     nuf = int(1e6)
@@ -474,7 +474,6 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
 
     for i in range(lvy):
         sn = sn + vc[i]
-
 
     sm = 0
 

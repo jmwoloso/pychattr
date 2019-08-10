@@ -1,7 +1,7 @@
 """
-The pychattr Channel Attribution package.
+The Python Channel Attribution (pychattr) package.
 """
-# Author: Jason Wolosonovich
+# Author: Jason Wolosonovich <jason@refinerynet.com>
 # License: BSD 3-clause
 
 from .heuristic import HeuristicModel

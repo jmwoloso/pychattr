@@ -2,7 +2,7 @@
 Contains the class wrapper for the Markov model used in channel
 attribution.
 """
-# Author: Jason Wolosonovich <jason@avaland.io>
+# Author: Jason Wolosonovich <jason@refinerynet.com>
 # License: BSD 3-clause
 
 from ._mixins import MarkovModelMixin
@@ -48,30 +48,6 @@ class MarkovModel(MarkovModelMixin):
       NOTE: The values contained within this feature must
       be numeric.
 
-    path_date_feature: string; default=None; required if
-     `time_decay=True`.
-      The name of the feature representing the dates of each event
-      within the paths.
-
-      NOTE: The format for the values in this feature are expected to
-      be constructed according to the following format:
-        for a given path (e.g. "A>>B>>C") corresponding dates might look
-        like: "2019-01-01>>>2019-02-01>>>2019-03-01" where the separator
-        is the same as that used to construct the paths.
-
-    conversion_date_feature: string; default=None; required if
-      `time_decay=True`.
-      The name of the feature representing the date of the events found
-      in `conversion_feature`.
-
-    direct_channel: string; default=None; required if
-    `exclude_direct=True`.
-      The name of the direct channel within the paths of the dataset.
-
-    exclude_direct: boolean; default=False; optional.
-      Whether to exclude the direct channel during the model fitting
-      process. If `True`, then `direct_channel` must be specified.
-
     separator: string; default=">>>"; required.
       The symbol used to separate the channels in each path.
 
@@ -103,41 +79,30 @@ class MarkovModel(MarkovModelMixin):
 
     Attributes
     ----------
-    # TODO: add attrs here
+    attribution_model_: The attribution model output.
 
-    Examples
-    --------
-    #TODO: add examples here
+    transition_matrix_: The transition probability matrix.
 
-    See Also
-    --------
-    #TODO: add see also (if needed)
-
-    Notes
-    -----
-    #TODO: add notes here (if needed)
+    removal_effects_: The removal effects for each channel.
 
     References
     ----------
     https://www.bizible.com/blog/multi-touch-attribution-full-debrief
+    https://cran.r-project.org/web/packages/ChannelAttribution
+    /ChannelAttribution.pdf
+
     """
+
     def __init__(self, path_feature, conversion_feature,
                  null_feature=None, revenue_feature=None,
-                 cost_feature=None, path_date_feature=None,
-                 conversion_date_feature=None, direct_channel=None,
-                 exclude_direct=False, separator=">",
+                 cost_feature=None, separator=">",
                  return_summary=False, k_order=1,
                  n_simulations=10000, max_steps=None,
                  return_transition_probs=True, random_state=None):
-
         super().__init__(path_feature, conversion_feature,
                          null_feature=null_feature,
                          revenue_feature=revenue_feature,
                          cost_feature=cost_feature,
-                         path_date_feature=path_date_feature,
-                         conversion_date_feature=conversion_date_feature,
-                         direct_channel=direct_channel,
-                         exclude_direct=exclude_direct,
                          separator=separator,
                          return_summary=return_summary,
                          k_order=k_order, n_simulations=n_simulations,
