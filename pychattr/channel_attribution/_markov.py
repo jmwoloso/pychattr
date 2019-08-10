@@ -59,41 +59,40 @@ class Fx(object):
     def tran_matx(self, vchannels):
         vsm = []
         vk = []
-        vM1 = []
-        vM2 = []
-        vM3 = []
+        channel_from = []
+        channel_to = []
+        num_transitions = []
         k = 0
         for i in range(self.nrows):
             sm3 = 0
-            j = 0
+            # j = 0
             for j in range(self.lrS0[i]):
                 mij = self.S[i, int(self.S0[i, j])]
                 if mij > 0:
-                    vM1.append(vchannels[i])
-                    vM2.append(vchannels[int(self.S0[i, j])])
-                    vM3.append(mij)
-                    sm3 = sm3 + mij
-                    k = k + 1
+                    channel_from.append(vchannels[i])
+                    channel_to.append(vchannels[int(self.S0[i, j])])
+                    num_transitions.append(mij)
+                    sm3 += mij
+                    k += 1
             vsm.append(sm3)
             vk.append(k)
 
-        vM3 = np.asarray(vM3, dtype=float)
+        num_transitions = np.asarray(num_transitions, dtype=float)
         vsm = np.asarray(vsm)
         vk = np.asarray(vk)
 
         w = 0
-        k = 0
 
         for k in range(self.non_zeros):
             if k == vk[w]:
                 w += 1
-            vM3[k] /= vsm[w]
-            k += 1
+            num_transitions[k] /= vsm[w]
 
+        trans_probs = num_transitions
         tmat_data = {
-            "channel_from": vM1,
-            "channel_to": vM2,
-            "transition_probability": vM3
+            "channel_from": channel_from,
+            "channel_to": channel_to,
+            "transition_probability": trans_probs
         }
         return pd.DataFrame(tmat_data)
 
@@ -102,7 +101,10 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
                out_more, sep, order, random_state):
     var_path = df.loc[:, paths].values.tolist()
     conv = df.loc[:, convs].values.tolist()
-    var_value = df.loc[:, conv_val].values.tolist()
+    if conv_val:
+        var_value = df.loc[:, conv_val].values.tolist()
+    else:
+        var_value = []
     if nulls:
         var_null = df.loc[:, nulls].values.tolist()
     else:
@@ -518,48 +520,48 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
     for k in range(nch0 + 1):
         vchannels0[k - 1] = vchannels[k]
 
-        if flg_var_value:
-            if not out_more:
-                df = pd.DataFrame(
-                    {
-                        "channel": vchannels0,
-                        "markov_conversions": TV,
-                        "markov_revenue": VV
-                    }
-                )
-                return df
-            else:
-                df = pd.DataFrame({
-                    "channel": vchannels0,
-                    "markov_conversions": TV,
-                    "markov_revenue": VV
-                })
-
-                re_df = pd.DataFrame({
-                    "channel": vchannels0,
-                    "removal_effects_conversion": rTV,
-                    "removal_effects_conversion_value": rVV
-                })
-
-                tmat = trans_mat.copy()
-                return df, re_df, tmat
+    if flg_var_value:
+        if not out_more:
+            df = pd.DataFrame(
+                {
+                    "channel_name": vchannels0,
+                    "total_conversions": TV,
+                    "total_revenue": VV
+                }
+            )
+            return df
         else:
-            if not out_more:
-                df = pd.DataFrame({
-                    "channel_name": vchannels0,
-                    "total_conversion": TV
-                })
-                return df
-            else:
-                df = pd.DataFrame({
-                    "channel_name": vchannels0,
-                    "total_conversions": TV
-                })
+            df = pd.DataFrame({
+                "channel_name": vchannels0,
+                "total_conversions": TV,
+                "total_revenue": VV
+            })
 
-                re_df = pd.DataFrame({
-                    "channel_name": vchannels0,
-                    "removal_effects": rTV
-                })
+            re_df = pd.DataFrame({
+                "channel_name": vchannels0,
+                "removal_effect": rTV,
+                "removal_effect_value": rVV
+            })
 
-                tmat = trans_mat.copy()
-                return df, re_df, tmat
+            tmat = trans_mat.copy()
+            return df, re_df, tmat
+    else:
+        if not out_more:
+            df = pd.DataFrame({
+                "channel_name": vchannels0,
+                "total_conversions": TV
+            })
+            return df
+        else:
+            df = pd.DataFrame({
+                "channel_name": vchannels0,
+                "total_conversions": TV
+            })
+
+            re_df = pd.DataFrame({
+                "channel_name": vchannels0,
+                "removal_effect": rTV
+            })
+
+            tmat = trans_mat.copy()
+            return df, re_df, tmat
