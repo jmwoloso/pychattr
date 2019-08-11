@@ -9,20 +9,16 @@ import functools
 import pandas as pd
 
 
-def _fit_heuristics(df, heuristic, paths, conversions, sep,
-                    revenues=None, costs=None, has_rev=False,
-                    has_cost=False):
+def _fit_heuristics(df, heuristic, paths, conversions, revenues=None,
+                    costs=None, has_rev=False, has_cost=False):
     """Generates the specified heuristic model using partial
     application."""
 
-    def first_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
+    def first_touch(d, path_f, conv_f, rev_f=None, cost_f=None,
                     rev=False, cost=False):
         """First-touch attribution model."""
         results = []
         ps = d.loc[:, path_f].values
-        # ps = d.loc[:, path_f].apply(
-        #     lambda s: s.split(sp)
-        # ).values
 
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
@@ -50,14 +46,11 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         # aggregate the results
         return df_.groupby(["channel"], as_index=False).agg(agg)
 
-    def last_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
+    def last_touch(d, path_f, conv_f, rev_f=None, cost_f=None,
                    rev=False, cost=False):
         """Last-touch attribution model."""
         results = []
         ps = d.loc[:, path_f].values
-        # ps = d.loc[:, path_f].apply(
-        #     lambda s: s.split(sp)
-        # ).values
 
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
@@ -86,13 +79,12 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         # aggregate the results
         return df_.groupby(["channel"], as_index=False).agg(agg)
 
-    def linear_touch(d, path_f, conv_f, sp, rev_f=None, cost_f=None,
+    def linear_touch(d, path_f, conv_f, rev_f=None, cost_f=None,
                      rev=False, cost=False):
         """Linear touch attribution model."""
         # container to hold the resulting dataframes
         results = []
         ps = d.loc[:, path_f].values
-        # ps = d.loc[:, path_f].apply(lambda s: s.split(sp)).values
 
         for i, path in enumerate(ps):
             df_ = pd.DataFrame({"channel": path})
@@ -121,8 +113,8 @@ def _fit_heuristics(df, heuristic, paths, conversions, sep,
         return df_.groupby(["channel"], as_index=False).agg(aggs)
 
     f = functools.partial(eval(heuristic), df, paths, conversions,
-                          sep, rev_f=revenues, cost_f=costs,
-                          rev=has_rev, cost=has_cost)
+                          rev_f=revenues, cost_f=costs, rev=has_rev,
+                          cost=has_cost)
     return f
 
 
@@ -157,7 +149,7 @@ def _ensemble_results(d, heuristics, rev=None, cost=None):
 
 
 def fit_heuristic_models(heuristics, df, paths,
-                         conversions, sep, revenues=None, costs=None,
+                         conversions, revenues=None, costs=None,
                          has_rev=False, has_cost=False):
     """
     Unified interface for fitting the heuristic models.
@@ -166,7 +158,7 @@ def fit_heuristic_models(heuristics, df, paths,
     for heuristic in heuristics:
         if heuristic != "ensemble":
             model = _fit_heuristics(df, heuristic, paths, conversions,
-                                    sep, revenues=revenues, costs=costs,
+                                    revenues=revenues, costs=costs,
                                     has_rev=has_rev,
                                     has_cost=has_cost)
 

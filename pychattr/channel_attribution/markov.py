@@ -51,14 +51,6 @@ class MarkovModel(MarkovModelMixin):
     separator: string; default=">>>"; required.
       The symbol used to separate the channels in each path.
 
-    return_summary: boolean; default=False; optional.
-      Whether the return summary statistics on the sales cycle for
-      the given dataset.
-
-      NOTE: both `path_date_feature` and `conversion_date_feature`
-      must be specified as they are used during the calculation of
-      summary statistics.
-
     k_order : int; default=1.
       denotes the order, or "memory" of the Markov model.
 
@@ -95,8 +87,7 @@ class MarkovModel(MarkovModelMixin):
 
     def __init__(self, path_feature, conversion_feature,
                  null_feature=None, revenue_feature=None,
-                 cost_feature=None, separator=">",
-                 return_summary=False, k_order=1,
+                 cost_feature=None, separator=">>>", k_order=1,
                  n_simulations=10000, max_steps=None,
                  return_transition_probs=True, random_state=None):
         super().__init__(path_feature, conversion_feature,
@@ -104,7 +95,6 @@ class MarkovModel(MarkovModelMixin):
                          revenue_feature=revenue_feature,
                          cost_feature=cost_feature,
                          separator=separator,
-                         return_summary=return_summary,
                          k_order=k_order, n_simulations=n_simulations,
                          max_steps=max_steps,
                          return_transition_probs=return_transition_probs,

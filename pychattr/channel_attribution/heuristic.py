@@ -43,14 +43,6 @@ class HeuristicModel(HeuristicModelMixin):
     separator: string; default=">>>"; required.
       The symbol used to separate the channels in each path.
 
-    return_summary: boolean; default=False; optional.
-      Whether the return summary statistics on the sales cycle for
-      the given dataset.
-
-      NOTE: both `path_date_feature` and `conversion_date_feature`
-      must be specified as they are used during the calculation of
-      summary statistics.
-
     first_touch: boolean; default=True.
       Whether to calculate the first-touch heuristic model.
 
@@ -80,14 +72,15 @@ class HeuristicModel(HeuristicModelMixin):
     """
 
     def __init__(self, path_feature, conversion_feature,
-                 null_feature=None, separator=">",
-                 return_summary=False, first_touch=True,
+                 revenue_feature=None, cost_feature=None,
+                 null_feature=None, separator=">>>", first_touch=True,
                  last_touch=True, linear_touch=True,
                  ensemble_results=True):
         super().__init__(path_feature, conversion_feature,
                          null_feature=null_feature,
+                         revenue_feature=revenue_feature,
+                         cost_feature=cost_feature,
                          separator=separator,
-                         return_summary=return_summary,
                          first_touch=first_touch,
                          last_touch=last_touch,
                          linear_touch=linear_touch,
@@ -108,7 +101,6 @@ class HeuristicModel(HeuristicModelMixin):
             self._df,
             self.paths,
             self.conversions,
-            self.sep,
             revenues=self.revenues,
             costs=self.costs,
             has_rev=self._has_rev,

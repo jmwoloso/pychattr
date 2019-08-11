@@ -11,15 +11,13 @@ import abc
 class AttributionModelBase(metaclass=abc.ABCMeta):
     def __init__(self, path_feature, conversion_feature,
                  null_feature=None, revenue_feature=None,
-                 cost_feature=None, separator=">",
-                 return_summary=False):
+                 cost_feature=None, separator=">>>"):
         self.paths = path_feature
         self.conversions = conversion_feature
         self.nulls = null_feature
         self.revenues = revenue_feature
         self.costs = cost_feature
         self.sep = separator
-        self.summary = return_summary
 
     def fit(self, df):
         """
@@ -48,15 +46,16 @@ class AttributionModelBase(metaclass=abc.ABCMeta):
 
 class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
     def __init__(self, path_feature, conversion_feature,
-                 null_feature=None, separator=">",
-                 return_summary=False, first_touch=True,
+                 null_feature=None, revenue_feature=None,
+                 cost_feature=None, separator=">>>", first_touch=True,
                  last_touch=True, linear_touch=True,
                  ensemble_results=True):
 
         super().__init__(path_feature, conversion_feature,
                          null_feature=null_feature,
-                         separator=separator,
-                         return_summary=return_summary)
+                         revenue_feature=revenue_feature,
+                         cost_feature=cost_feature,
+                         separator=separator)
 
         self.first = first_touch
         self.last = last_touch
@@ -71,6 +70,8 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
         # aggregate by path
         if df.loc[:, self.paths].max() == 1:
             self._aggregate_paths(self._df)
+        else:
+            self._df = self._split_paths(df)
 
         return self
 
@@ -88,19 +89,22 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
         # aggregate the values by path
         gb = df.groupby([self.paths], as_index=False).agg(aggs)
 
+        self._df = self._split_paths(gb)
+
+        return self
+
+    def _split_paths(self, df):
         # split the paths into lists of channels
-        gb.loc[:, self.paths] = gb.loc[:, self.paths].apply(
+        df.loc[:, self.paths] = df.loc[:, self.paths].apply(
             lambda s: s.split(self.sep)
         )
 
         # remove whitespace around channel names
-        gb.loc[:, self.paths] = gb.loc[:, self.paths].apply(
+        df.loc[:, self.paths] = df.loc[:, self.paths].apply(
             lambda s: [ss.strip() for ss in s]
         )
 
-        self._df = gb.copy()
-
-        return self
+        return df
 
     def _get_heuristics(self):
         """Get the heuristic models to build."""
@@ -123,16 +127,14 @@ class HeuristicModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
 class MarkovModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
     def __init__(self, path_feature, conversion_feature,
                  null_feature=None, revenue_feature=None,
-                 cost_feature=None, separator=">",
-                 return_summary=False, k_order=1, n_simulations=10000,
-                 max_steps=None, return_transition_probs=True,
-                 random_state=None):
+                 cost_feature=None, separator=">>>", k_order=1,
+                 n_simulations=10000, max_steps=None,
+                 return_transition_probs=True, random_state=None):
         super().__init__(path_feature, conversion_feature,
                          null_feature=null_feature,
                          revenue_feature=revenue_feature,
                          cost_feature=cost_feature,
-                         separator=separator,
-                         return_summary=return_summary)
+                         separator=separator)
 
         self.order = k_order
         self.n_sim = n_simulations
