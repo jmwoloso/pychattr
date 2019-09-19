@@ -212,7 +212,7 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
                 j += 1
 
             if cfirst == 0:
-                channel = s[start_pos]
+                channel = s[start_pos:end_pos+1]
 
                 if channel not in mp_channels.keys():
                     mp_channels[channel] = nchannels
