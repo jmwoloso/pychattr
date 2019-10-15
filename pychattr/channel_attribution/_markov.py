@@ -565,33 +565,3 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
 
             tmat = trans_mat.copy()
             return df, re_df, tmat
-
-
-if __name__ == '__main__':
-    df = pd.DataFrame({"path": ["display>ppc>seo",
-                                "display",
-                                "ppc>seo",
-                                "Aaa>Bbb",
-                                "Bbb>Ccc",
-                                "Ddd>Ccc",
-                                "Eee>Ddd",
-                                "Ddd>Fff",
-                                "Fff>Ggg",
-                                "Ggg>Hhh"],
-                       "conversion": [1, 0, 0, 1, 1, 1, 1, 1, 1, 2],
-                       "null": [0, 1, 1, 1, 1, 1, 1, 1, 1, 1]})
-
-    mm = fit_markov(
-                   df,
-                   "path",
-                   "conversion",
-                   None,
-                   "null",
-                   10000,
-                   None,
-                   True,
-                   ">",
-                   1,
-                   None)
-
-    print(mm)
