@@ -68,6 +68,9 @@ class MarkovModel(MarkovModelMixin):
       the seed used by the random number generator; ensures
       reproducibility between runs when specified.
 
+    loops : bool; required; default=True.
+      whether to estimate loops, i.e., going from state A
+      to state A.
 
     Attributes
     ----------
@@ -89,7 +92,7 @@ class MarkovModel(MarkovModelMixin):
                  null_feature=None, revenue_feature=None,
                  cost_feature=None, separator=">>>", k_order=1,
                  n_simulations=10000, max_steps=None,
-                 return_transition_probs=True, random_state=None):
+                 return_transition_probs=True, random_state=None, loops=True):
         super().__init__(path_feature, conversion_feature,
                          null_feature=null_feature,
                          revenue_feature=revenue_feature,
@@ -98,7 +101,8 @@ class MarkovModel(MarkovModelMixin):
                          k_order=k_order, n_simulations=n_simulations,
                          max_steps=max_steps,
                          return_transition_probs=return_transition_probs,
-                         random_state=random_state)
+                         random_state=random_state,
+                         loops=loops)
 
     def fit(self, df):
         """
@@ -127,7 +131,8 @@ class MarkovModel(MarkovModelMixin):
             self.trans_probs,
             self.sep,
             self.order,
-            self.random_state
+            self.random_state,
+            self.loops
         )
 
         self.attribution_model_ = df
