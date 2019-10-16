@@ -100,7 +100,7 @@ class Fx(object):
 
 
 def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
-               out_more, sep, order, random_state):
+               out_more, sep, order, random_state, loops):
     var_path = df.loc[:, paths].values.tolist()
     conv = df.loc[:, convs].values.tolist()
     if conv_val:
@@ -120,6 +120,9 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
 
     # do we have nulls?
     flg_var_null = True if len(var_null) > 0 else False
+
+    # do we allow loops?
+    flg_equal = loops
 
     # get the list of paths
     vy = var_path
@@ -344,14 +347,15 @@ def fit_markov(df, paths, convs, conv_val, nulls, nsim, max_step,
         vpi = vci + vni
 
         while j < ssize:
+            start_j = j
             while s[j] != " ":
                 if j < ssize:
-                    channel = s[j]
+                    channel = s[start_j:(j+1)]
                 j = j + 1
                 continue
             j = j + 1
 
-            if channel != channel_old:
+            if flg_equal or channel != channel_old:
                 if channel[0] != "0":
                     if channel[0] == "e":
                         npassi += 1

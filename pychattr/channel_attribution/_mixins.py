@@ -129,7 +129,7 @@ class MarkovModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
                  null_feature=None, revenue_feature=None,
                  cost_feature=None, separator=">>>", k_order=1,
                  n_simulations=10000, max_steps=None,
-                 return_transition_probs=True, random_state=None):
+                 return_transition_probs=True, random_state=None, loops=True):
         super().__init__(path_feature, conversion_feature,
                          null_feature=null_feature,
                          revenue_feature=revenue_feature,
@@ -141,6 +141,7 @@ class MarkovModelMixin(AttributionModelBase, metaclass=abc.ABCMeta):
         self.max_steps = max_steps
         self.trans_probs = return_transition_probs
         self.random_state = random_state
+        self.loops = loops
 
     def fit(self, df):
         super().fit(df)
