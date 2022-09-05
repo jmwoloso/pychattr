@@ -4,7 +4,7 @@ This is a Python implementation based on the ChannelAttribution package in R dev
 
 https://cran.r-project.org/web/packages/ChannelAttribution/ChannelAttribution.pdf
 
-**Please Note:** The authors of the original R library now also provide a python implementation of [ChannelAttribution](https://pypi.org/project/ChannelAttribution/) which you should probably use instead of my implmentation since there's has additional features not available in this package.
+**Please Note:** The authors of the original R library now also provide a python implementation of [ChannelAttribution](https://pypi.org/project/ChannelAttribution/) which you should probably use instead of my implmentation since theirs has additional features not available in this package.
 
 
 
